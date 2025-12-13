@@ -75,7 +75,6 @@
 
         </nav>
     </div>
-
     <!-- Glavni sadržaj -->
     <div class="content">
         @yield('content')

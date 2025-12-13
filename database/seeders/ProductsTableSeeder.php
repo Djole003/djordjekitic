@@ -10,139 +10,57 @@ class ProductsTableSeeder extends Seeder
     public function run(): void
     {
         $products = [
-            [
-                'name' => 'Pekinška Patka',
-                'description' => 'Ukusno jelo od patke iz Kine.',
-                'price' => 1200.00,
-                'category' => 'Glavno jelo',
-                'image_path' => 'assets/pekinska-patka.jpg',
-            ],
-            [
-                'name' => 'General Tso Piletina',
-                'description' => 'Kinesko jelo sa piletinom u sočnom sosu.',
-                'price' => 900.00,
-                'category' => 'Glavno jelo',
-                'image_path' => 'assets/General Tso Chicken.jpg',
-            ],
-            [
-                'name' => 'Dim Sum',
-                'description' => 'Kineski specijalitet sa punjenjem od mesa i povrća.',
-                'price' => 600.00,
-                'category' => 'Dezert',
-                'image_path' => 'assets/dim-sum.jpg',
-            ],
-            [
-                'name' => 'Kung Pao Piletina',
-                'description' => 'Piletina u ljutom i slatkom sosu sa kikirikijem.',
-                'price' => 850.00,
-                'category' => 'Glavno jelo',
-                'image_path' => 'assets/kung-pao.jpg',
-            ],
-            [
-                'name' => 'Slatko-ljuta Svinjetina',
-                'description' => 'Svinjsko meso u slatko-ljutom sosu.',
-                'price' => 950.00,
-                'category' => 'Glavno jelo',
-                'image_path' => 'assets/Sweet and Sour Pork.webp',
-            ],
-            [
-                'name' => 'Cao Mein Nudle',
-                'description' => 'Kineski nudli sa povrćem i mesom.',
-                'price' => 700.00,
-                'category' => 'Glavno jelo',
-                'image_path' => 'assets/Cao-mein-nudle.jpg',
-            ],
-            [
-                'name' => 'Govedina sa Brokolijem',
-                'description' => 'Govedina sa brokolijem u sočnom sosu.',
-                'price' => 950.00,
-                'category' => 'Glavno jelo',
-                'image_path' => 'assets/govedina-sa-brokolijem.jpg',
-            ],
-            [
-                'name' => 'Hrskava Patka',
-                'description' => 'Hrskava patka sa posebnom marinadom.',
-                'price' => 1400.00,
-                'category' => 'Glavno jelo',
-                'image_path' => 'assets/Hrskava-Patka.jpg',
-            ],
-            [
-                'name' => 'Prolećne rolnice',
-                'description' => 'Pržene kineske rolne sa povrćem.',
-                'price' => 550.00,
-                'category' => 'Dezert',
-                'image_path' => 'assets/prolecne-rolnice.jpg',
-            ],
-            [
-                'name' => 'Wonton Supa',
-                'description' => 'Tradicionalna kineska supa sa wonton knedlama.',
-                'price' => 500.00,
-                'category' => 'Supa',
-                'image_path' => 'assets/wonton-supa.jpg',
-            ],
-            [
-                'name' => 'Supa sa Tofuom',
-                'description' => 'Supa sa tofu sirom i povrćem.',
-                'price' => 450.00,
-                'category' => 'Supa',
-                'image_path' => 'assets/supa-sa-tofuom.jpg',
-            ],
-            [
-                'name' => 'Supa sa kineskim gljivama',
-                'description' => 'Ukusna supa sa gljivama i začinima.',
-                'price' => 400.00,
-                'category' => 'Supa',
-                'image_path' => 'assets/supa-sa-gljivama.jpg',
-            ],
-            [
-                'name' => 'Kiselo-ljuta Supa',
-                'description' => 'Kineska supa sa začinima i kiselkastim ukusom.',
-                'price' => 350.00,
-                'category' => 'Supa',
-                'image_path' => 'assets/kiselo-ljuta-supa.jpg',
-            ],
-            [
-                'name' => 'Zeleni Čaj',
-                'description' => 'Osvežavajući kineski zeleni čaj.',
-                'price' => 300.00,
-                'category' => 'Piće',
-                'image_path' => 'assets/zeleni-caj.webp',
-            ],
-            [
-                'name' => 'Kineski Crni Čaj',
-                'description' => 'Kineski crni čaj sa bogatim ukusom.',
-                'price' => 350.00,
-                'category' => 'Piće',
-                'image_path' => 'assets/crni-caj.webp',
-            ],
-            [
-                'name' => 'Kineska limunada',
-                'description' => 'Osvežavajuća limunada sa kineskim začinima.',
-                'price' => 400.00,
-                'category' => 'Piće',
-                'image_path' => 'assets/kineska-limunada.jpg',
-            ],
-            [
-                'name' => 'Svetla piva',
-                'description' => 'Kineska svetla piva sa blagim ukusom.',
-                'price' => 500.00,
-                'category' => 'Piće',
-                'image_path' => 'assets/svetla-piva.webp',
-            ],
-            [
-                'name' => 'Torta od limunke',
-                'description' => 'Ukusna limun-torta sa kineskim začinima.',
-                'price' => 650.00,
-                'category' => 'Dezert',
-                'image_path' => 'assets/torta-od-limonke.webp',
-            ],
-            [
-                'name' => 'Mu Šu Svinjetina',
-                'description' => 'Svinjsko meso sa povrćem, servira se sa palačinkama.',
-                'price' => 1000.00,
-                'category' => 'Glavno jelo',
-                'image_path' => 'assets/svinjetina-mu-su.jpg',
-            ],
+            // Predjela i salate (category_id = 1)
+            ['name' => 'Salata sa algama', 'description' => 'alge, povrće, beli luk, začini', 'price' => 320, 'category_id' => 1, 'image_path' => 'assets/salata_sa_algama.JPG'],
+            ['name' => 'Salata sa nudlama', 'description' => 'pirinčane nudle, povrće, začini', 'price' => 320, 'category_id' => 1, 'image_path' => 'assets/salata_sa_nudlama.JPG'],
+            ['name' => 'Salata sa susamom', 'description' => 'susam, povrće, kukuruz, začini', 'price' => 320, 'category_id' => 1, 'image_path' => 'assets/salata_susam.JPG'],
+            ['name' => 'Rolnice sa mesom i povrćem', 'description' => '', 'price' => 300, 'category_id' => 1, 'image_path' => 'assets/rolnice_meso.JPG'],
+            ['name' => 'Rolnice sa povrćem', 'description' => '', 'price' => 270, 'category_id' => 1, 'image_path' => 'assets/rolnice_povrce.JPG'],
+            ['name' => 'Cips od škampa', 'description' => '', 'price' => 200, 'category_id' => 1, 'image_path' => 'assets/cips.jpg'],
+
+            // Supe (category_id = 2)
+            ['name' => 'Tomato supa', 'description' => '', 'price' => 300, 'category_id' => 2, 'image_path' => 'assets/tomato_supa.JPG'],
+            ['name' => 'Kiselo ljuta supa', 'description' => '', 'price' => 300, 'category_id' => 2, 'image_path' => 'assets/kiselo_ljuta_supa.JPG'],
+
+            // Morski plodovi (category_id = 3)
+            ['name' => 'Pohovani riblji file', 'description' => '', 'price' => 1000, 'category_id' => 3, 'image_path' => ''],
+            ['name' => 'Pohovane lignje', 'description' => '', 'price' => 1100, 'category_id' => 3, 'image_path' => ''],
+
+            // Jela bez mesa (category_id = 4)
+            ['name' => 'Tofu sir', 'description' => '', 'price' => 300, 'category_id' => 4, 'image_path' => ''],
+            ['name' => 'Mesano povrće', 'description' => 'povrće, paprika, kineske pečurke, šampinjoni, sos po želji', 'price' => 750, 'category_id' => 4, 'image_path' => 'assets/mesano_povrce.JPG'],
+            ['name' => 'Prženi rezanci', 'description' => '', 'price' => 250, 'category_id' => 4, 'image_path' => ''],
+            ['name' => 'Pirinčane nudle', 'description' => '', 'price' => 250, 'category_id' => 4, 'image_path' => ''],
+
+            // Pirinač i nudle (category_id = 5)
+            ['name' => 'Beli pirinac', 'description' => '', 'price' => 200, 'category_id' => 5, 'image_path' => 'assets/beli_pirinac.JPG'],
+            ['name' => 'Kari pirinac', 'description' => '', 'price' => 250, 'category_id' => 5, 'image_path' => 'assets/kari_pirinac.JPG'],
+            ['name' => 'Sareni pirinac', 'description' => 'jaja i povrće', 'price' => 300, 'category_id' => 5, 'image_path' => 'assets/sareni_pirinac.JPG'],
+            ['name' => 'Pirinac sa jajima', 'description' => '', 'price' => 200, 'category_id' => 5, 'image_path' => 'assets/jaje_pirinac.JPG'],
+            ['name' => 'Pirinac-Meso-Povrće', 'description' => '', 'price' => 450, 'category_id' => 5, 'image_path' => 'assets/pmp.JPG'],
+
+            // Dezerti (category_id = 6)
+            ['name' => 'Pohovani ananas', 'description' => '', 'price' => 300, 'category_id' => 6, 'image_path' => 'assets/poh_ananas.JPG'],
+            ['name' => 'Pohovana banana', 'description' => '', 'price' => 300, 'category_id' => 6, 'image_path' => 'assets/poh_banana.JPG'],
+            ['name' => 'Pohovana cokolada', 'description' => '', 'price' => 350, 'category_id' => 6, 'image_path' => 'assets/poh_cokolada.JPG'],
+            ['name' => 'Pohovana jabuka', 'description' => '', 'price' => 300, 'category_id' => 6, 'image_path' => 'assets/poh_jabuka.JPG'],
+
+            // Jela sa mesom (category_id = 7)
+            ['name' => 'Bambus-Kineske Pecurke', 'description' => 'povrće, šampinjoni, bambus, kineske pečurke, sos', 'price' => 750, 'category_id' => 7, 'image_path' => 'assets/bambus_kin_pecurke.JPG'],
+            ['name' => 'Meso u kari sosu', 'description' => 'Povrće, sos', 'price' => 700, 'category_id' => 7, 'image_path' => 'assets/kari_sos.JPG'],
+            ['name' => 'Meso u kiselo ljutom sosu', 'description' => 'Povrće, sos', 'price' => 700, 'category_id' => 7, 'image_path' => 'assets/kiselo_ljuti.JPG'],
+            ['name' => 'Kraljevska Piletina', 'description' => 'Kupus na dnu, susam piletina, ananas, tomato sos', 'price' => 800, 'category_id' => 7, 'image_path' => 'assets/kralj.JPG'],
+            ['name' => 'Kung pao piletina', 'description' => 'krastavac, paprika, krompir, šargarepa, kikiriki, tomato sos', 'price' => 850, 'category_id' => 7, 'image_path' => 'assets/kung_pao.JPG'],
+            ['name' => 'Meso u ostriga sosu', 'description' => 'Kupus na dnu, meso, sos', 'price' => 700, 'category_id' => 7, 'image_path' => 'assets/ostriga_sos.JPG'],
+            ['name' => 'Meso sa paprikom u peking sosu', 'description' => 'paprika, šampinjoni, šargarepa, sos', 'price' => 750, 'category_id' => 7, 'image_path' => 'assets/paprika_peking.JPG'],
+            ['name' => 'Meso sa prazilukom u peking sosu', 'description' => 'praziluk, šampinjoni, šargarepa, sos', 'price' => 750, 'category_id' => 7, 'image_path' => 'assets/praziluk_peking.JPG'],
+            ['name' => 'Meso sa kikirikijem', 'description' => 'povrće, kikiriki, sos', 'price' => 700, 'category_id' => 7, 'image_path' => 'assets/sa_kikirikijem.JPG'],
+            ['name' => 'Meso sa bademom', 'description' => 'povrće, badem, sos', 'price' => 750, 'category_id' => 7, 'image_path' => 'assets/sa_bademom.JPG'],
+            ['name' => 'Meso sa indijskim orahom', 'description' => 'povrće, indijski orah, sos', 'price' => 750, 'category_id' => 7, 'image_path' => 'assets/sa_indijskim_orahom.JPG'],
+            ['name' => 'Meso sa nudlama', 'description' => 'povrće, šampinjoni, nudle, sos', 'price' => 750, 'category_id' => 7, 'image_path' => 'assets/sa_nudlama.JPG'],
+            ['name' => 'Meso sa sampinjonima', 'description' => 'povrće, šampinjoni, sos', 'price' => 700, 'category_id' => 7, 'image_path' => 'assets/sa_sampinjonima.JPG'],
+            ['name' => 'Meso sa sitaki pecurkama', 'description' => 'povrće, šitaki pečurke, sos', 'price' => 750, 'category_id' => 7, 'image_path' => 'assets/sitaki.JPG'],
+            ['name' => 'Susam piletina', 'description' => 'povrće, šampinjoni, sos po želji', 'price' => 750, 'category_id' => 7, 'image_path' => 'assets/susam_pile.JPG'],
         ];
 
         foreach ($products as $product) {

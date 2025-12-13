@@ -2,57 +2,244 @@
 @include('partials.header')
 
 @section('content')
-<div class="container my-5 cart-container">
-    <h1 class="cart-title">Vaša korpa</h1>
 
-    @if(session('order') && count(session('order')) > 0)
-        <table class="table cart-table mt-4">
-            <thead class="cart-table-head">
-                <tr>
-                    <th>Proizvod</th>
-                    <th>Količina</th>
-                    <th>Cena po komadu</th>
-                    <th>Ukupno</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @php $totalPrice = 0; @endphp
-                @foreach(session('order') as $item)
-                    <tr class="cart-item-row">
-                        <td class="product-name">{{ \App\Models\Product::find($item['id'])->name ?? 'Nepoznat proizvod' }}</td>
-                        <td class="product-qty">{{ $item['kolicina'] }}</td>
-                        <td class="product-price">{{ number_format($item['cena'], 2) }} RSD</td>
-                        <td class="product-total">{{ number_format($item['cena'] * $item['kolicina'], 2) }} RSD</td>
-                        <td class="product-action">
-                            <form method="POST" action="{{ route('order.remove', $item['id']) }}">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger btn-remove">Ukloni</button>
-                            </form>
-                        </td>
+<style>
+/* ------- GLOBAL CART WRAPPER ------- */
+.cart-wrapper {
+    width: 100%;
+    padding: 20px 10px;
+    background: #f5f5f5;
+}
+
+.cart-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.08);
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.cart-title {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 25px;
+}
+
+/* ------- TABLE DESKTOP ------- */
+.cart-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cart-table th {
+    background: #fafafa;
+    border-bottom: 2px solid #eee;
+    padding: 14px 8px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.cart-table td {
+    padding: 14px 8px;
+    border-bottom: 1px solid #f1f1f1;
+    vertical-align: middle;
+    animation: fadeIn 0.4s ease;
+}
+
+/* ------- PRODUCT IMAGE ------- */
+.cart-item-row img {
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    object-fit: cover;
+    margin-right: 10px;
+    transition: transform 0.2s ease;
+}
+
+.cart-item-row img:hover {
+    transform: scale(1.05);
+}
+
+/* ------- REMOVE BUTTON ------- */
+.btn-remove {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-remove:hover {
+    background: #e60000;
+    transform: scale(1.05);
+}
+
+/* ------- CONFIRM BUTTON ------- */
+.btn-confirm {
+    width: 100%;
+    background: #27ae60;
+    color: white;
+    border: none;
+    font-size: 18px;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 600;
+    margin-top: 25px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-confirm:hover {
+    background: #1e8c4d;
+    transform: scale(1.01);
+}
+
+/* ------- MOBILE ------- */
+@media (max-width: 768px) {
+
+    .cart-table thead {
+        display: none;
+    }
+
+    .cart-table, .cart-table tbody, .cart-table tr, .cart-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .cart-table tr {
+        background: #ffffff;
+        border-radius: 16px;
+        margin-bottom: 18px;
+        padding: 14px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        animation: fadeIn 0.5s ease;
+    }
+
+    .cart-table td {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: none;
+        font-size: 15px;
+    }
+
+    .cart-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #666;
+    }
+
+    .product-name {
+        flex-direction: column;
+        text-align: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .product-name img {
+        margin: 0 auto;
+    }
+
+    .cart-table-foot {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .total-price {
+        font-size: 22px;
+        font-weight: 700;
+    }
+}
+</style>
+
+
+<div class="cart-wrapper">
+    <div class="cart-container">
+
+        <h2 class="cart-title">Vaša korpa</h2>
+
+        @if(session('cart') && count(session('cart')) > 0)
+            <table class="cart-table">
+                <thead class="cart-table-head">
+                    <tr>
+                        <th>Proizvod</th>
+                        <th>Veličina</th>
+                        <th>Sos</th>
+                        <th>Dodaci</th>
+                        <th>Količina</th>
+                        <th>Cena</th>
+                        <th>Mešanje pirinča</th>
+                        <th>Akcija</th>
                     </tr>
-                    @php $totalPrice += $item['cena'] * $item['kolicina']; @endphp
-                @endforeach
-            </tbody>
-            <tfoot class="cart-table-foot">
-                <tr>
-                    <th colspan="3" class="text-end total-label">Ukupno:</th>
-                    <th class="total-price">{{ number_format($totalPrice, 2) }} RSD</th>
-                    <th></th>
-                </tr>
-            </tfoot>
-        </table>
+                </thead>
+                <tbody>
+                    @php $totalPrice = 0; @endphp
+                    @foreach(session('cart') as $index => $item)
+                        @php
+                            $product = \App\Models\Product::find($item['product_id']);
+                            $addons = \App\Models\AddOn::whereIn('id', $item['addons'] ?? [])->pluck('name')->toArray();
+                            $cenaPoKomadu = $product->price;
+                            if($item['size'] === 'velika') $cenaPoKomadu += 200;
+                            if(!empty($item['addons'])) $cenaPoKomadu += count($item['addons']) * 100;
+                            $ukupnaCena = $cenaPoKomadu * $item['quantity'];
+                            $totalPrice += $ukupnaCena;
+                        @endphp
+                        <tr class="cart-item-row">
+                            <td data-label="Proizvod" class="product-name d-flex align-items-center">
+                                @if($product->image_path)
+                                    <img src="{{ asset($product->image_path) }}" alt="{{ $product->name }}">
+                                @endif
+                                <span>{{ $product->name }}</span>
+                            </td>
 
-        <form action="{{ route('order.submit') }}" method="POST" class="d-inline">
-            @csrf
-            <button type="submit" class="btn btn-success btn-confirm">Potvrdi porudžbinu</button>
-        </form>
+                            <td data-label="Veličina">{{ ucfirst($item['size'] ?? '-') }}</td>
+                            <td data-label="Sos">{{ $item['sos'] ?? '-' }}</td>
+                            <td data-label="Dodaci">{{ !empty($addons) ? implode(', ', $addons) : '-' }}</td>
+                            <td data-label="Količina">{{ $item['quantity'] }}</td>
+                            <td data-label="Cena">{{ $ukupnaCena }} RSD</td>
+                            <td data-label="Mešanje pirinča">{{ $item['mix_rice'] ?? '-' }}</td>
+                            <td data-label="Akcija">
+                                <form action="{{ route('order.remove', $index) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn-remove">Ukloni</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
 
+                <tfoot class="cart-table-foot">
+                    <tr>
+                        <th colspan="5" class="total-label">Ukupno:</th>
+                        <th colspan="2" class="total-price">{{ $totalPrice }} RSD</th>
+                    </tr>
+                </tfoot>
+            </table>
 
-    @else
-        <p class="empty-cart-text">Vaša korpa je prazna.</p>
-    @endif
+            <form action="{{ route('order.submit') }}" method="POST">
+                @csrf
+                <a href="{{ route('order.checkout') }}" class="btn-confirm">Nastavi na poručivanje</a>
+            </form>
+
+        @else
+            <p class="empty-cart-text" style="text-align:center; font-size:20px; padding:20px;">
+                Vaša korpa je prazna.
+            </p>
+        @endif
+
+    </div>
 </div>
-@include('partials.footer')
+
 @endsection

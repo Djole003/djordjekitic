@@ -16,7 +16,8 @@ class OrderSeeder extends Seeder
      */
     public function run(): void
     {
-        $statusi = ['na čekanju', 'odobrena', 'otkazana'];
+        // Statusi koje koristimo u admin panelu
+        $statusi = ['Na čekanju', 'Prihvaćena', 'Dostavlja se'];
 
         $users = User::all();
 
@@ -52,5 +53,4 @@ class OrderSeeder extends Seeder
             ]);
         }
     }
-
 }

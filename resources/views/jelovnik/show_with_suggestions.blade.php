@@ -14,9 +14,10 @@
                 <p class="main-dish-price">Cena: {{ number_format($jelo->price, 2) }} RSD</p>
                 <p class="main-dish-orders">Poručeno puta: {{ $jelo->total_orders }}</p>
 
-                <!-- Dugme za poručivanje -->
-                <a href="{{ route('order.add', ['id' => $jelo->id]) }}" class="btn btn-danger mt-3">Poruči</a>
-
+                <!-- Dugme za povratak na kategoriju -->
+                <a href="{{ route('jelovnik.kategorija', ['slug' => $jelo->category->slug]) }}" class="btn btn-secondary mt-3">
+                    Nazad na {{ $jelo->category->name }}
+                </a>
             </div>
         </div>
 
@@ -56,5 +57,6 @@
         </div>
     </div>
 </div>
-@include('partials.footer')
+
+
 @endsection

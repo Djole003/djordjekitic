@@ -21,10 +21,11 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
-            // \Illuminate\Session\Middleware\AuthenticateSession::class, // opcionalno
+            // \Illuminate\Session\Middleware\AuthenticateSession::class, // opciono
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \App\Http\Middleware\VerifyCsrfToken::class, // Ovaj je obavezan za CSRF zaštitu
+            \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\CheckOpeningHours::class, // tvoj middleware
         ],
 
         'api' => [
@@ -33,10 +34,12 @@ class Kernel extends HttpKernel
         ],
     ];
 
+
     protected $routeMiddleware = [
         'auth' => \App\Http\Middleware\Authenticate::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class, 
         'is_admin_or_editor' => \App\Http\Middleware\IsAdminOrEditor::class,
 
     ];
+
 }

@@ -39,20 +39,12 @@
                 </a>
             @endif
 
-            <x-primary-button class="ms-3">
+            <x-primary-button class="btn-primary">
                 {{ __('Log in') }}
             </x-primary-button>
         </div>
     </form>
 
-    <!-- Dodatni link za registraciju -->
-    @if (Route::has('register'))
-        <p class="mt-4 text-center text-sm text-gray-600">
-            {{ __("Nemate nalog?") }}
-            <a href="{{ route('register') }}" class="text-indigo-600 hover:text-indigo-900 underline">
-                {{ __('Registrujte se') }}
-            </a>
-        </p>
-    @endif
+
 
 </x-guest-layout>

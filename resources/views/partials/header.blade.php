@@ -8,42 +8,69 @@
     <title>Mister Wang</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/logo.png') }}" />
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
 <body>
     <!-- Responsive navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-        <a class="navbar-brand" href="/">
-            <img src="{{ asset('assets/logo.png') }}" alt="Logo" style="height: 40px; border-radius:7px;">
-        </a>
+            <a class="navbar-brand" href="/">
+                <img src="{{ asset('assets/logo.png') }}" alt="Logo" style="height: 40px; border-radius:7px;">
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span
-                    class="navbar-toggler-icon"></span></button>
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link" href="/jelovnik">Jelovnik</a></li>
                     <li class="nav-item"><a class="nav-link" href="/kontakt">Kontakt</a></li>
 
                     @guest
-                        <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Prijava</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ route('register') }}">Registracija</a></li>
+                        <li class="nav-item">
+                            <a href="{{ route('login') }}" 
+                            class="btn btn-outline-warning fw-bold" 
+                            style="border-radius: 50px; padding: 8px 20px; transition: transform 0.2s;">
+                            Prijava
+                            </a>
+                        </li>
                     @endguest
 
+
                     @auth
+                        @if(auth()->user()->role === 'admin' || auth()->user()->role === 'editor')
+                            <li class="nav-item"><a class="nav-link" href="{{ route('admin.dashboard') }}">Urednički deo</a></li>
+                        @endif
 
-                    @if(auth()->user()->role === 'admin' || auth()->user()->role === 'editor')
-                        <li class="nav-item"><a class="nav-link" href="{{ route('admin.dashboard') }}">Urednicki deo</a></li>
-                    @endif
+                        <!-- Ikonica korisnika sa dropdown-om -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center justify-content-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:40px; height:40px; border-radius:50%; background:#fff; color:#000; font-weight:bold; text-align:center; line-height:40px;">
+                                {{ strtoupper(auth()->user()->name[0]) }}
+                            </a>
 
+                            <ul class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="userDropdown" style="min-width:220px;">
+                                <!-- Ime korisnika -->
+                                <li><strong>{{ auth()->user()->name }}</strong></li>
 
-                        <li class="nav-item">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="nav-link btn btn-link" style="color: white; text-decoration: none;">
-                                    Odjava ({{ auth()->user()->name }})
-                                </button>
-                            </form>
+                                <!-- Kredit -->
+                                <li class="mt-1">Kredit: <strong>{{ number_format(auth()->user()->credit ?? 0, 0, ',', '.') }} RSD</strong></li>
+
+                                <li><hr class="dropdown-divider"></li>
+
+                                <!-- Dugme za pregled narudžbina -->
+                                <li class="mt-1">
+                                    <a href="{{ route('user.orders.index') }}" class="btn btn-primary btn-sm w-100">Pregled narudžbina</a>
+                                </li>
+
+                                <!-- Dugme za odjavu -->
+                                <li class="mt-1">
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-danger btn-sm w-100">Odjava</button>
+                                    </form>
+                                </li>
+                            </ul>
                         </li>
                     @endauth
                 </ul>
@@ -74,7 +101,7 @@
 
         @php
             $cart = session('order', []);
-            $count = 0;
+            $count = 0; 
             foreach ($cart as $item) {
                 $count += $item['kolicina'];
             }
