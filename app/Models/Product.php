@@ -14,10 +14,20 @@ class Product extends Model
     protected $fillable = [
         'name',
         'description',
-        'price',
+        'price_delivery', // nova kolona
+        'price_takeaway', // nova kolona
         'image_path',
         'category_id', // veza sa kategorijom
     ];
+
+    /**
+     * Accessor za pravu cenu u zavisnosti od tipa porudžbine
+     */
+    public function getPriceAttribute()
+    {
+        $type = session('order_type', 'delivery'); // default je delivery
+        return $type === 'takeaway' ? $this->price_takeaway : $this->price_delivery;
+    }
 
     /**
      * Veza sa kategorijom

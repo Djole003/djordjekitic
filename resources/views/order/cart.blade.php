@@ -163,13 +163,21 @@
 }
 </style>
 
-
 <div class="cart-wrapper">
     <div class="cart-container">
 
         <h2 class="cart-title">Vaša korpa</h2>
 
+        {{-- Prikaz tipa porudžbine --}}
+        @php
+            $orderType = session('order_type', 'delivery');
+        @endphp
+        <p style="text-align:center; font-size:16px; margin-bottom:20px;">
+            Tip porudžbine: <strong>{{ $orderType === 'delivery' ? 'Dostava' : 'Preuzimanje' }}</strong>
+        </p>
+
         @if(session('cart') && count(session('cart')) > 0)
+            @php $totalPrice = 0; @endphp
             <table class="cart-table">
                 <thead class="cart-table-head">
                     <tr>
@@ -184,31 +192,48 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php $totalPrice = 0; @endphp
                     @foreach(session('cart') as $index => $item)
                         @php
                             $product = \App\Models\Product::find($item['product_id']);
-                            $addons = \App\Models\AddOn::whereIn('id', $item['addons'] ?? [])->pluck('name')->toArray();
-                            $cenaPoKomadu = $product->price;
-                            if($item['size'] === 'velika') $cenaPoKomadu += 200;
-                            if(!empty($item['addons'])) $cenaPoKomadu += count($item['addons']) * 100;
+                            $details = $item['details'] ?? [];
+
+                            // Dodaci
+                            $addonsIds = $details['addons'] ?? [];
+                            $addons = \App\Models\AddOn::whereIn('id', $addonsIds)->pluck('name')->toArray();
+
+                            $orderType = session('order_type', 'delivery');
+                            $basePrice = $orderType === 'delivery' ? $product->price_delivery : $product->price_takeaway;
+
+                            // Velika porcija
+                            if(($details['size'] ?? null) === 'velika') {
+                                $basePrice += 200;
+                            }
+
+                            // Cena dodataka
+                            $addonsPrice = 0;
+                            if(!empty($addonsIds)) {
+                                $addonsPrice = array_sum(\App\Models\AddOn::whereIn('id', $addonsIds)->pluck('price')->toArray());
+                            }
+
+                            $cenaPoKomadu = $basePrice + $addonsPrice;
                             $ukupnaCena = $cenaPoKomadu * $item['quantity'];
                             $totalPrice += $ukupnaCena;
                         @endphp
+
                         <tr class="cart-item-row">
                             <td data-label="Proizvod" class="product-name d-flex align-items-center">
-                                @if($product->image_path)
+                                @if($product && $product->image_path)
                                     <img src="{{ asset($product->image_path) }}" alt="{{ $product->name }}">
                                 @endif
-                                <span>{{ $product->name }}</span>
+                                <span>{{ $product->name ?? 'Nepoznat proizvod' }}</span>
                             </td>
 
-                            <td data-label="Veličina">{{ ucfirst($item['size'] ?? '-') }}</td>
-                            <td data-label="Sos">{{ $item['sos'] ?? '-' }}</td>
+                            <td data-label="Veličina">{{ ucfirst($details['size'] ?? '-') }}</td>
+                            <td data-label="Sos">{{ $details['sos'] ?? '-' }}</td>
                             <td data-label="Dodaci">{{ !empty($addons) ? implode(', ', $addons) : '-' }}</td>
                             <td data-label="Količina">{{ $item['quantity'] }}</td>
                             <td data-label="Cena">{{ $ukupnaCena }} RSD</td>
-                            <td data-label="Mešanje pirinča">{{ $item['mix_rice'] ?? '-' }}</td>
+                            <td data-label="Mešanje pirinča">{{ $details['mix_rice'] ?? '-' }}</td>
                             <td data-label="Akcija">
                                 <form action="{{ route('order.remove', $index) }}" method="POST">
                                     @csrf
@@ -218,6 +243,7 @@
                             </td>
                         </tr>
                     @endforeach
+
                 </tbody>
 
                 <tfoot class="cart-table-foot">
@@ -228,10 +254,7 @@
                 </tfoot>
             </table>
 
-            <form action="{{ route('order.submit') }}" method="POST">
-                @csrf
-                <a href="{{ route('order.checkout') }}" class="btn-confirm">Nastavi na poručivanje</a>
-            </form>
+            <a href="{{ route('order.checkout') }}" class="btn-confirm">Nastavi na poručivanje</a>
 
         @else
             <p class="empty-cart-text" style="text-align:center; font-size:20px; padding:20px;">

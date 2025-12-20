@@ -3,16 +3,15 @@
 
 <!-- HERO SECTION -->
 <section class="hero position-relative">
-    <a href="{{ route('jelovnik') }}" class="text-decoration-none">
-        <div class="hero-image" style="background-image: url('{{ asset('assets/hero.jpg') }}'); height: 70vh; background-size: cover; background-position: center;">
-            <div class="hero-overlay d-flex flex-column justify-content-center align-items-center text-white text-center h-100" style="background: rgba(0,0,0,0.4);">
-                <h1 class="display-4 fw-bold">Poruči odmah!</h1>
-                <p class="fs-5 mb-3">Autentični kineski ukusi, brzo i kvalitetno!</p>
-                <a href="{{ route('jelovnik') }}" class="btn btn-danger btn-lg">Pogledaj jelovnik</a>
-            </div>
+    <div class="hero-image" style="background-image: url('{{ asset('assets/hero.jpg') }}'); height: 70vh; background-size: cover; background-position: center;">
+        <div class="hero-overlay d-flex flex-column justify-content-center align-items-center text-white text-center h-100" style="background: rgba(0,0,0,0.4);">
+            <h1 class="display-4 fw-bold">Poruči odmah!</h1>
+            <p class="fs-5 mb-3">Autentični kineski ukusi, brzo i kvalitetno!</p>
+            <a href="{{ route('jelovnik') }}" class="btn btn-danger btn-lg open-order-type-modal">Pogledaj jelovnik</a>
         </div>
-    </a>
+    </div>
 </section>
+
 
 <section class="hero-slider-section">
     <div class="hero-slider-container">
@@ -22,7 +21,8 @@
                 <p class="dish-category">Predjelo</p>
                 <h2 class="dish-title">Rolnice sa povrćem</h2>
                 <p class="dish-description">Hrskave rolnice punjene svežim povrćem, savršen početak obroka.</p>
-                <a href="#" class="btn btn-details">Detalji proizvoda</a>
+                <a href="{{ url('/jela/5') }}" class="btn btn-details open-order-type-modal">Detalji proizvoda</a>
+
             </div>
             <div class="dish-image">
                 <img src="{{ asset('assets/rolnice_povrce.jpg') }}" alt="Rolnice sa povrćem">
@@ -35,7 +35,8 @@
                 <p class="dish-category">Glavno jelo</p>
                 <h2 class="dish-title">Kraljevska Piletina</h2>
                 <p class="dish-description">Sočna piletina u aromatičnom sosu sa povrćem i začinima.</p>
-                <a href="#" class="btn btn-details">Detalji proizvoda</a>
+                <a href="{{ url('/jela/27') }}" class="btn btn-details open-order-type-modal">Detalji proizvoda</a>
+
             </div>
             <div class="dish-image">
                 <img src="{{ asset('assets/kralj.jpg') }}" alt="Kraljevska Piletina">
@@ -48,7 +49,7 @@
                 <p class="dish-category">Glavno jelo</p>
                 <h2 class="dish-title">Kung Pao Piletina <span style="color:#FF4D4D;">(Specijalitet kuće)</span></h2>
                 <p class="dish-description">Autentična piletina sa kikirikijem i začinima, sočna i pikantna.</p>
-                <a href="#" class="btn btn-details">Detalji proizvoda</a>
+                <a href="{{ url('/jela/28') }}" class="btn btn-details open-order-type-modal">Detalji proizvoda</a>
             </div>
             <div class="dish-image">
                 <img src="{{ asset('assets/kung_pao.jpg') }}" alt="Kung Pao Piletina">
@@ -61,7 +62,8 @@
                 <p class="dish-category">Vegetarijansko</p>
                 <h2 class="dish-title">Mešano povrće</h2>
                 <p class="dish-description">Sveže i sezonsko povrće prženo sa aromatičnim kineskim začinima.</p>
-                <a href="#" class="btn btn-details">Detalji proizvoda</a>
+                <a href="{{ url('/jela/12') }}" class="btn btn-details open-order-type-modal">Detalji proizvoda</a>
+
             </div>
             <div class="dish-image">
                 <img src="{{ asset('assets/mesano_povrce.jpg') }}" alt="Mešano povrće">
@@ -74,7 +76,8 @@
                 <p class="dish-category">Dezert</p>
                 <h2 class="dish-title">Pohovana banana</h2>
                 <p class="dish-description">Sladak i hrskav dezert, idealan završetak obroka.</p>
-                <a href="#" class="btn btn-details">Detalji proizvoda</a>
+                <a href="{{ url('/jela/21') }}" class="btn btn-details open-order-type-modal">Detalji proizvoda</a>
+
             </div>
             <div class="dish-image">
                 <img src="{{ asset('assets/poh_banana.jpg') }}" alt="Pohovana banana">
@@ -141,45 +144,15 @@
 </section>
 
 
-
-
-
-<!-- CATEGORIES SECTION -->
-<section class="categories py-5 bg-light">
-    <div class="container text-center">
-        <h2 class="fw-bold mb-4">Istraži naše kategorije</h2>
-        <div class="row justify-content-center g-3">
-            @php
-                $dummyCategories = [
-                    ['name'=>'Predjela','slug'=>'predjela','image'=>'assets/cat1.jpg'],
-                    ['name'=>'Supe','slug'=>'supe','image'=>'assets/cat2.jpg'],
-                    ['name'=>'Pirinac & Nudle','slug'=>'pirinac-i-nudle','image'=>'assets/cat3.jpg'],
-                    ['name'=>'Morski plodovi','slug'=>'morski-plodovi','image'=>'assets/cat4.jpg'],
-                    ['name'=>'Dezerti','slug'=>'dezerti','image'=>'assets/cat5.jpg'],
-                ];
-            @endphp
-            @foreach($dummyCategories as $category)
-            <div class="col-6 col-sm-4 col-md-2">
-                <a href="{{ route('jelovnik.kategorija', $category['slug']) }}" class="text-decoration-none text-dark">
-                    <div class="card h-100 p-2 shadow-sm hover-scale" style="transition: transform 0.2s;">
-                        <img src="{{ asset($category['image']) }}" class="card-img-top mb-2" style="height:80px; object-fit:cover; border-radius:6px;">
-                        <p class="fw-bold mb-0">{{ $category['name'] }}</p>
-                    </div>
-                </a>
-            </div>
-            @endforeach
-        </div>
-    </div>
-</section>
-
 <!-- ABOUT / CTA -->
 <section class="cta py-5">
     <div class="container text-center">
         <h2 class="fw-bold mb-3">Spreman za porudžbinu?</h2>
         <p class="mb-4">Izaberi omiljena jela i naruči brzo i jednostavno!</p>
-        <a href="{{ route('jelovnik') }}" class="btn btn-danger btn-lg">Poruči sada</a>
+        <a href="{{ route('jelovnik') }}" class="btn btn-danger btn-lg open-order-type-modal">Poruči sada</a>
     </div>
 </section>
+
 
 @include('partials.footer')
 

@@ -31,6 +31,15 @@ Route::get('/checkout', [OrderController::class, 'checkout'])->name('order.check
 Route::post('/poruci/zavrsi', [OrderController::class, 'submitOrder'])->name('order.submit');
 Route::get('/thankyou', [OrderController::class, 'thankyou'])->name('order.thankyou');
 
+
+// Postavljanje tipa porudžbine (delivery / takeaway)
+Route::get('/select-order-type/{type}', function($type) {
+    if(!in_array($type, ['delivery','takeaway'])) $type = 'delivery';
+    session(['order_type' => $type]);
+    return response()->json(['status' => 'ok']);
+});
+
+
 // ------------------------
 // ADMIN RUTE
 // ------------------------
@@ -50,8 +59,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth', 'role:admin,editor'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('products', AdminProductController::class);
     Route::resource('orders', AdminOrderController::class)->except(['show', 'create', 'store']);
+    
     Route::post('orders/{id}/accept', [AdminOrderController::class, 'accept'])->name('orders.accept');
     Route::post('orders/{id}/delivered', [AdminOrderController::class, 'delivered'])->name('orders.delivered');
+    Route::get('orders/data', [AdminOrderController::class, 'data'])->name('orders.data');
 });
 
 

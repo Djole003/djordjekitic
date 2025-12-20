@@ -8,65 +8,89 @@ use Illuminate\Http\Request;
 
 class AdminOrderController extends Controller
 {
-    // Prikaz admin panela narudžbina sa dve kolone
+    /**
+     * Prikaz admin panela narudžbina
+     * - Levo: na čekanju
+     * - Sredina: u pripremi
+     * - Desno: dostavlja se
+     */
     public function index()
     {
-        // Narudžbine koje čekaju da budu prihvaćene
-        $pendingOrders = Order::with('user', 'products.addons')
-            ->where('status', 'na čekanju')
-            ->orderBy('created_at', 'desc')
+        $waitingOrders = Order::with('orderProducts.product')
+            ->where('status', 'na cekanju')
+            ->orderBy('created_at', 'asc')
             ->get();
 
-        // Narudžbine koje su prihvaćene i u pripremi/dostavi
-        $acceptedOrders = Order::with('user', 'products.addons')
-            ->whereIn('status', ['prihvaćena', 'dostavlja se'])
-            ->orderBy('updated_at', 'desc')
+        $preparingOrders = Order::with('orderProducts.product')
+            ->where('status', 'u pripremi')
+            ->orderBy('ready_at', 'asc')
             ->get();
 
-        return view('admin.orders.index', compact('pendingOrders', 'acceptedOrders'));
+        $deliveringOrders = Order::with('orderProducts.product')
+            ->where('status', 'dostavlja se')
+            ->orderBy('updated_at', 'asc')
+            ->get();
+
+        return view('admin.orders.index', compact(
+            'waitingOrders',
+            'preparingOrders',
+            'deliveringOrders'
+        ));
     }
 
-    // Prihvatanje narudžbine i definisanje vremena pripreme
-    public function accept($id, Request $request)
+    /**
+     * Prihvatanje narudžbine
+     * Status: na cekanju -> u pripremi
+     */
+    public function accept(Request $request, $id)
     {
-        $order = Order::findOrFail($id);
-
         $request->validate([
-            'preparation_time' => 'required|integer|min:15|max:60',
+            'preparation_time' => 'required|integer|min:1|max:180',
         ]);
 
-        $order->status = 'prihvaćena';
-        $order->preparation_time = $request->preparation_time; // u minutima
-        $order->save();
+        $order = Order::findOrFail($id);
 
-        return redirect()->back()->with('success', 'Narudžbina prihvaćena.');
+        $order->update([
+            'status' => 'u pripremi',
+            'preparation_time' => $request->preparation_time,
+            'ready_at' => now()->addMinutes($request->preparation_time),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Narudžbina prihvaćena'
+        ]);
     }
 
-    // Označavanje narudžbine kao dostavlja se
-    public function deliver($id)
+    /**
+     * Klik na dugme "Spremno"
+     * Status: u pripremi -> dostavlja se
+     */
+    public function ready($id)
     {
         $order = Order::findOrFail($id);
-        $order->status = 'dostavlja se';
-        $order->save();
 
-        return redirect()->back()->with('success', 'Narudžbina je sada u dostavi.');
+        $order->update([
+            'status' => 'dostavlja se',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Narudžbina spremna za dostavu'
+        ]);
     }
 
-    // Označavanje narudžbine kao isporučena
-    public function delivered($id)
+    /**
+     * Automatsko završavanje narudžbina
+     * (poziva se preko cron-a ili scheduler-a)
+     */
+    public function finishOrders()
     {
-        $order = Order::findOrFail($id);
-        $order->status = 'isporučeno';
-        $order->save();
-
-        return redirect()->back()->with('success', 'Narudžbina isporučena.');
-    }
-
-    // Brisanje narudžbine
-    public function destroy($id)
-    {
-        $order = Order::findOrFail($id);
-        $order->delete();
-        return redirect()->back()->with('success', 'Narudžbina obrisana.');
+        Order::where('status', 'dostavlja se')
+            ->whereNotNull('ready_at')
+            ->where('ready_at', '<=', now())
+            ->update([
+                'status' => 'zavrsena'
+            ]);
     }
 }

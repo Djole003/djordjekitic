@@ -3,6 +3,12 @@
 @include('partials.header')
 
 @section('content')
+@php
+    // Provera tipa porudžbine iz sessiona
+    $orderType = session('order_type', 'delivery'); // default: dostava
+    $price = $orderType === 'delivery' ? $jelo->price_delivery : $jelo->price_takeaway;
+@endphp
+
 <div class="custom-detail-wrapper container my-5">
     <div class="row">
         <!-- Glavno jelo levo -->
@@ -11,7 +17,7 @@
                 <img src="{{ asset($jelo->image_path) }}" alt="{{ $jelo->name }}" class="main-dish-img">
                 <h2 class="main-dish-title">{{ $jelo->name }}</h2>
                 <p class="main-dish-desc">{{ $jelo->description }}</p>
-                <p class="main-dish-price">Cena: {{ number_format($jelo->price, 2) }} RSD</p>
+                <p class="main-dish-price">Cena: {{ number_format($price, 2) }} RSD</p>
                 <p class="main-dish-orders">Poručeno puta: {{ $jelo->total_orders }}</p>
 
                 <!-- Dugme za povratak na kategoriju -->
@@ -29,7 +35,7 @@
                 <div class="row">
                     @foreach($pice as $p)
                         <div class="col-md-4 col-6 mb-3">
-                            <a href="{{ route('dish.showWithSuggestions', ['id' => $p->id]) }}" class="text-decoration-none text-dark">
+                            <a href="{{ route('dish.showWithSuggestions', ['id' => $p->id]) }}" class="text-decoration-none text-dark open-order-type-modal">
                                 <div class="suggestion-card">
                                     <img src="{{ asset($p->image_path) }}" alt="{{ $p->name }}" class="suggestion-img">
                                     <p class="suggestion-name">{{ $p->name }}</p>
@@ -44,7 +50,7 @@
                 <div class="row">
                     @foreach($dezerti as $d)
                         <div class="col-md-4 col-6 mb-3">
-                            <a href="{{ route('dish.showWithSuggestions', ['id' => $d->id]) }}" class="text-decoration-none text-dark">
+                            <a href="{{ route('dish.showWithSuggestions', ['id' => $d->id]) }}" class="text-decoration-none text-dark open-order-type-modal">
                                 <div class="suggestion-card">
                                     <img src="{{ asset($d->image_path) }}" alt="{{ $d->name }}" class="suggestion-img">
                                     <p class="suggestion-name">{{ $d->name }}</p>
@@ -57,6 +63,5 @@
         </div>
     </div>
 </div>
-
 
 @endsection

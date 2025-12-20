@@ -6,182 +6,157 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Product;
 use App\Models\Order;
-use App\Models\AddOn;
 
 class OrderController extends Controller
 {
     /**
-     * Dodavanje proizvoda u korpu (sa opcijama)
+     * Dodavanje proizvoda u korpu
      */
     public function addToCart(Request $request)
     {
-        try {
-            // Validator
-            $validator = \Validator::make($request->all(), [
-                'product_id' => 'required|exists:products,id',
-                'size' => 'nullable|in:mala,velika',
-                'sos' => 'nullable|in:Tomato,Soja,Sečuan',
-                'meat' => 'nullable|in:Piletina,Svinjetina',
-                'addons' => 'array|nullable',
-                'quantity' => 'required|integer|min:1',
-                'notes' => 'nullable|string|max:255',
-            ]);
+        $validator = \Validator::make($request->all(), [
+            'product_id' => 'required|exists:products,id',
+            'size' => 'nullable|in:mala,velika',
+            'sos' => 'nullable|string',
+            'meat' => 'nullable|string',
+            'addons' => 'array|nullable',
+            'quantity' => 'required|integer|min:1',
+            'notes' => 'nullable|string|max:255',
+            'mix_rice' => 'nullable|string',
+        ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
-            $product = Product::findOrFail($request->product_id);
-
-            $price = $product->price;
-
-            // Doplata za veliku veličinu
-            if ($request->size === 'velika') {
-                $price += 200;
-            }
-
-            // Cena dodataka
-            if (!empty($request->addons)) {
-                $addonsPrice = AddOn::whereIn('id', $request->addons)->sum('price');
-                $price += $addonsPrice;
-            }
-
-            $item = [
-                'product_id' => $product->id,
-                'name' => $product->name,
-                'size' => $request->size ?? '',
-                'sos' => $request->sos ?? '',
-                'meat' => $request->meat ?? '',
-                'addons' => $request->addons ?? [],
-                'notes' => $request->notes ?? '',
-                'quantity' => $request->quantity,
-                'price' => $price * $request->quantity,
-                'mix_rice' => $request->mix_rice ?? '',
-            ];
-
-            $cart = session('cart', []);
-            $cart[] = $item;
-            session(['cart' => $cart]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Proizvod dodat u korpu!',
-                'cart_count' => count($cart),
-            ]);
-        } catch (\Exception $e) {
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Došlo je do greške na serveru: ' . $e->getMessage(),
-            ], 500);
+                'errors' => $validator->errors(),
+            ], 422);
         }
+
+        $product   = Product::findOrFail($request->product_id);
+        $orderType = session('order_type', 'delivery');
+
+        // Osnovna cena
+        $price = $orderType === 'delivery'
+            ? $product->price_delivery
+            : $product->price_takeaway;
+
+        // Velika porcija
+        if ($request->size === 'velika') {
+            $price += 200;
+        }
+
+        // Dodaci (samo id-evi se čuvaju, cena se računa kasnije)
+        $addons = $request->addons ?? [];
+
+        $item = [
+            'product_id' => $product->id,
+            'name'       => $product->name,
+            'quantity'   => $request->quantity,
+            'details' => [
+                'size'     => $request->size,
+                'sos'      => $request->sos,
+                'meat'     => $request->meat,
+                'addons'   => $addons,
+                'notes'    => $request->notes,
+                'mix_rice' => $request->mix_rice,
+            ],
+        ];
+
+        $cart = session('cart', []);
+        $cart[] = $item;
+
+        session(['cart' => $cart]);
+
+        return response()->json([
+            'success'    => true,
+            'message'    => 'Proizvod dodat u korpu',
+            'cart_count' => count($cart),
+        ]);
     }
+
+
 
     /**
      * Prikaz korpe
      */
     public function showCart()
     {
-        $cart = session('cart', []);
-        $productIds = array_column($cart, 'product_id');
-        $products = Product::whereIn('id', $productIds)->get();
-
-        return view('order.cart', compact('cart', 'products'));
+        return view('order.cart', [
+            'cart' => session('cart', [])
+        ]);
     }
 
-
     /**
-     * Checkout forma
-    */
+     * Checkout
+     */
     public function checkout()
     {
         $cart = session('cart', []);
-
         if (empty($cart)) {
-            return redirect()->route('order.cart')->with('error', 'Vaša korpa je prazna.');
+            return redirect()->route('order.cart');
         }
 
-        $user = auth()->user();
-
-        return view('order.checkout', compact('cart', 'user'));
-    }
-
-
-
-    /**
-     * Uklanjanje proizvoda iz korpe
-     */
-    public function removeFromOrder($index)
-    {
-        $cart = session('cart', []);
-        if (isset($cart[$index])) {
-            unset($cart[$index]);
-        }
-        $cart = array_values($cart);
-        session(['cart' => $cart]);
-
-        return redirect()->route('order.cart')->with('success', 'Proizvod je uklonjen iz korpe.');
+        return view('order.checkout', [
+            'cart' => $cart,
+            'user' => auth()->user(),
+        ]);
     }
 
     /**
-     * Završavanje porudžbine
+     * Slanje porudžbine
      */
     public function submitOrder(Request $request)
     {
         $cart = session('cart', []);
-
         if (empty($cart)) {
             return redirect()->back()->with('error', 'Korpa je prazna.');
-        }
-
-        // Validator za guest podatke
-        $validator = \Validator::make($request->all(), [
-            'ime' => 'required|string|max:255',
-            'telefon' => 'required|string|max:20',
-            'adresa' => 'required|string|max:255',
-            'napomena' => 'nullable|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
         }
 
         DB::beginTransaction();
 
         try {
+            $orderType = session('order_type', 'delivery');
+
             $order = Order::create([
-                'user_id' => auth()->check() ? auth()->id() : null, // ako je guest, ostaje null
-                'status' => 'Primljena',
-                'total_price' => array_sum(array_column($cart, 'price')),
-                'ime' => $request->ime,
-                'telefon' => $request->telefon,
-                'adresa' => $request->adresa,
-                'napomena' => $request->napomena,
+                'user_id'       => auth()->id(),
+                'status'        => 'Primljena',
+                'order_type'    => $orderType,
+                'total_price'   => 0, // kasnije ćemo izračunati
+                'delivery_info' => json_encode([
+                    'ime'      => $request->ime,
+                    'telefon'  => $orderType === 'delivery' ? $request->telefon : null,
+                    'adresa'   => $orderType === 'delivery' ? $request->adresa : null,
+                    'napomena' => $request->napomena,
+                ]),
             ]);
 
             foreach ($cart as $item) {
                 $order->orderProducts()->create([
                     'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'size' => $item['size'] ?? null,
-                    'sos' => $item['sos'] ?? null,
-                    'meat' => $item['meat'] ?? null,
-                    'addons' => !empty($item['addons']) ? json_encode($item['addons']) : null,
-                    'price' => $item['price'],
+                    'quantity'   => $item['quantity'],
+                    'details'    => json_encode($item['details']),
                 ]);
             }
+
+            // Osveži relacije
+            $order->refresh()->load('orderProducts.product');
+
+            // Izračunaj tačnu cenu
+            $order->update([
+                'total_price' => $order->calculateTotalPrice()
+            ]);
 
             DB::commit();
             session()->forget('cart');
 
-            return redirect()->route('order.thankyou')->with('success', 'Porudžbina uspešno sačuvana!');
+            return redirect()->route('order.thankyou');
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Došlo je do greške: ' . $e->getMessage());
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
+
 
 
 

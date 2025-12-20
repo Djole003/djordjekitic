@@ -37,5 +37,52 @@
             @yield('content')
         </main>
     </div>
+
+    <!-- Modal za izbor tipa porudžbine -->
+    <div class="modal fade" id="orderTypeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-4">
+        <h5 class="modal-title text-center mb-3">Izaberite tip porudžbine</h5>
+        <div class="d-flex justify-content-around">
+            <button type="button" class="btn btn-primary order-type-btn" data-type="delivery">Dostava</button>
+            <button type="button" class="btn btn-secondary order-type-btn" data-type="takeaway">Lično preuzimanje</button>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Svi linkovi koji otvaraju modal
+        const orderLinks = document.querySelectorAll('.open-order-type-modal');
+
+        orderLinks.forEach(link => {
+            link.addEventListener('click', function(e){
+                e.preventDefault();
+                const targetUrl = link.getAttribute('href'); // gde ide link
+                const modalEl = document.getElementById('orderTypeModal');
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+
+                // Klik na dugme u modalu
+                document.querySelectorAll('.order-type-btn').forEach(btn => {
+                    btn.onclick = function(ev) {
+                        ev.preventDefault();
+                        const type = btn.dataset.type;
+
+                        fetch(`/select-order-type/${type}`)
+                            .then(() => {
+                                modal.hide(); // zatvori modal
+                                window.location.href = targetUrl; // ide na link
+                            });
+                    };
+                });
+            });
+        });
+    });
+    </script>
+
+
 </body>
 </html>

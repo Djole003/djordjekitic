@@ -13,28 +13,13 @@ class Order extends Model
         'user_id',
         'status',
         'total_price',
+        'delivery_info',
+        'order_type',
+        'ime',
+        'telefon',
+        'adresa',
+        'napomena',
     ];
-
-    public function products()
-    {
-        return $this->belongsToMany(Product::class, 'order_product')->withPivot('quantity');
-    }
-    
-
-    public function calculateTotalPrice()
-    {
-        $totalPrice = 0;
-
-        foreach ($this->products as $product) {
-            // Računanje ukupne cene (cena * količina)
-            $totalPrice += $product->price * $product->pivot->quantity;
-        }
-
-        return $totalPrice;
-    }
-
-    // Kada se kreira ili ažurira narudžbina, izračunaj ukupnu cenu
-
 
     public function orderProducts()
     {
@@ -45,4 +30,50 @@ class Order extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    /**
+     * Računa ukupnu cenu porudžbine na osnovu tipa porudžbine i opcija
+     */
+    public function calculateTotalPrice()
+    {
+        // Učitaj relacije ako već nisu
+        $this->loadMissing('orderProducts.product');
+
+        $totalPrice = 0;
+        $orderType = $this->order_type ?? 'delivery';
+
+        foreach ($this->orderProducts as $orderItem) {
+            $product = $orderItem->product;
+            if (!$product) continue;
+
+            // Osnovna cena po tipu porudžbine
+            $price = $orderType === 'delivery' ? $product->price_delivery : $product->price_takeaway;
+
+            // Dekodiraj details JSON
+            $details = json_decode($orderItem->details, true) ?? [];
+
+            // Velika porcija
+            if (($details['size'] ?? null) === 'velika') {
+                $price += 200;
+            }
+
+            // Dodaci iz baze
+            $addonsPrice = 0;
+            $addonIds = $details['addons'] ?? [];
+            if (!empty($addonIds)) {
+                $addons = \App\Models\AddOn::whereIn('id', $addonIds)->get();
+                foreach ($addons as $addon) {
+                    $addonsPrice += $addon->price;
+                }
+            }
+
+            $totalPrice += ($price + $addonsPrice) * $orderItem->quantity;
+        }
+
+        return $totalPrice;
+    }
+
+
+
+
 }

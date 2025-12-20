@@ -10830,6 +10830,9 @@ body{
   background-color: #a45625;
 }
 
+
+
+
 /* ======================== HERO SECTION ======================== */
 .hero-image {
     width: 100%;
@@ -10841,6 +10844,7 @@ body{
     align-items: center;
     justify-content: center;
     transition: transform 0.3s ease;
+    
 }
 
 .hero-overlay {
@@ -10855,6 +10859,16 @@ body{
     color: #FFD700;
     padding: 0 1rem;
 }
+
+.hero-overlay {
+    pointer-events: none;
+}
+
+.hero-overlay a,
+.hero-overlay button {
+    pointer-events: auto;
+}
+
 
 .hero-overlay h1 {
     font-size: 3rem;
@@ -10958,7 +10972,7 @@ body{
     align-items: center;
     opacity: 0;
     transition: opacity 1s ease, transform 1s ease;
-    padding: 20px;
+    padding: 45px;
     z-index: 1;
 }
 

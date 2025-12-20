@@ -121,29 +121,42 @@
 <div class="checkout-wrapper">
     <div class="checkout-container">
 
-        <h2 class="checkout-title">Detalji za dostavu</h2>
+        @php
+            $orderType = session('order_type', 'delivery'); // delivery ili takeaway
+        @endphp
+
+        <h2 class="checkout-title">
+            @if($orderType === 'delivery')
+                Detalji za dostavu
+            @else
+                Lično preuzimanje
+            @endif
+        </h2>
 
         <form action="{{ route('order.submit') }}" method="POST" class="checkout-form">
             @csrf
 
             <label>Ime i prezime</label>
-            <input type="text" name="name" required
+            <input type="text" name="ime" required
                    placeholder="Unesite ime i prezime"
-                   value="{{ old('name', auth()->user()->name ?? '') }}">
+                   value="{{ old('ime', auth()->user()->name ?? '') }}">
 
-            <label>Broj telefona</label>
-            <input type="text" name="telefon" required
-                   placeholder="065 123 4567"
-                   value="{{ old('telefon', auth()->user()->telefon ?? '') }}">
+            @if($orderType === 'delivery')
+                <label>Broj telefona</label>
+                <input type="text" name="telefon" required
+                       placeholder="065 123 4567"
+                       value="{{ old('telefon', auth()->user()->telefon ?? '') }}">
 
-            <label>Adresa dostave</label>
-            <input type="text" name="adresa" required
-                   placeholder="Ulica i broj, sprat, zvono..."
-                   value="{{ old('adresa', auth()->user()->adresa ?? '') }}">
+                <label>Adresa dostave</label>
+                <input type="text" name="adresa" required
+                       placeholder="Ulica i broj, sprat, zvono..."
+                       value="{{ old('adresa', auth()->user()->adresa ?? '') }}">
+            @endif
 
             <label>Napomena (opciono)</label>
             <textarea name="napomena" rows="3" placeholder="Npr. dodatno ljuto, ne zvoni...">{{ old('napomena') }}</textarea>
 
+            {{-- Pregled porudžbine --}}
             <div class="summary-box">
                 <div class="summary-title">Pregled porudžbine</div>
 
@@ -152,17 +165,42 @@
                 @foreach(session('cart', []) as $item)
                     @php
                         $product = \App\Models\Product::find($item['product_id']);
-                        $addons = $item['addons'] ?? [];
-                        $cena = $product->price;
-                        if($item['size'] === 'velika') $cena += 200;
-                        if(!empty($addons)) $cena += count($addons) * 100;
-                        $ukupno = $cena * $item['quantity'];
-                        $total += $ukupno;
+                        $details = $item['details'] ?? [];
+                        $addonIds = $details['addons'] ?? [];
+
+                        // Osnovna cena po tipu porudžbine
+                        $basePrice = $orderType === 'delivery'
+                            ? $product->price_delivery
+                            : $product->price_takeaway;
+
+                        // Velika porcija
+                        if(($details['size'] ?? null) === 'velika') {
+                            $basePrice += 200;
+                        }
+
+                        // Dodaci
+                        $addonsPrice = 0;
+                        $addonsList = [];
+                        if(!empty($addonIds)) {
+                            $addons = \App\Models\AddOn::whereIn('id', $addonIds)->get();
+                            foreach($addons as $addon) {
+                                $addonsPrice += $addon->price;
+                                $addonsList[] = $addon->name;
+                            }
+                        }
+
+                        $totalItemPrice = ($basePrice + $addonsPrice) * $item['quantity'];
+                        $total += $totalItemPrice;
                     @endphp
 
                     <div class="summary-item">
-                        <span>{{ $product->name }} × {{ $item['quantity'] }}</span>
-                        <span>{{ $ukupno }} RSD</span>
+                        <span>
+                            {{ $product->name }} × {{ $item['quantity'] }}
+                            @if(!empty($addonsList))
+                                <br><small>Dodaci: {{ implode(', ', $addonsList) }}</small>
+                            @endif
+                        </span>
+                        <span>{{ $totalItemPrice }} RSD</span>
                     </div>
                 @endforeach
 
