@@ -7,6 +7,11 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p0fV+g9+8Nl0dH7K1vDkFp4Zq6n0J3z9xg3q4P6/p7kZg0GQ1Dz1j6k1+FkA9H+1+6E1a8rP6T0/69Bwhx7hYg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#27ae60">
+
 
     <!-- Dodaj Bootstrap JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -83,6 +88,32 @@
     });
     </script>
 
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Service Worker registrovan', reg))
+                    .catch(err => console.error('❌ SW greška', err));
+            });
+        }
+    </script>
 
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => {
+                        console.log('✅ Service Worker registrovan:', reg.scope);
+                    })
+                    .catch(err => {
+                        console.error('❌ SW registracija neuspešna:', err);
+                    });
+            });
+        }
+    </script>
+
+
+
+    @yield('scripts')
 </body>
 </html>

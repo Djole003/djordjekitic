@@ -13,3 +13,5 @@ Homestead.json
 /.DS_Store
 *.log
 *.sqlite
+# Firebase Admin SDK credentials
+/storage/app/firebase-admin.json

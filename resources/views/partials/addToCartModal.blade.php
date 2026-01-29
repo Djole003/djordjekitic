@@ -68,6 +68,33 @@
               </div>
           </div>
 
+          <!-- Pribor -->
+          <div class="mb-3">
+              <label class="form-label fw-bold">Pribor</label>
+
+              <div class="form-check">
+                  <input class="form-check-input" type="radio" name="cutlery" value="stapici" id="cutleryChopsticks">
+                  <label class="form-check-label" for="cutleryChopsticks">
+                      🥢 Štapići
+                  </label>
+              </div>
+
+              <div class="form-check">
+                  <input class="form-check-input" type="radio" name="cutlery" value="plasticni" id="cutleryPlastic">
+                  <label class="form-check-label" for="cutleryPlastic">
+                      🍴 Plastični pribor
+                  </label>
+              </div>
+
+              <div class="form-check">
+                  <input class="form-check-input" type="radio" name="cutlery" value="bez" id="cutleryNone" checked>
+                  <label class="form-check-label" for="cutleryNone">
+                      ❌ Bez pribora
+                  </label>
+              </div>
+          </div>
+
+
 
           <!-- Poruka kuvaru -->
           <div class="mb-3">

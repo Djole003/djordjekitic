@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,16 +11,43 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-
-
         $this->call([
-            UserSeeder::class,
-            OrderSeeder::class,
-            AddOnSeeder::class,
-            CategoriesTableSeeder::class,
-            ProductsTableSeeder::class,
-            ReviewsSeeder::class,
-            OrderProductSeeder::class,
+
+            /*
+            |--------------------------------------------------------------------------
+            | OSNOVNI PODACI (REDOSLED JE BITAN)
+            |--------------------------------------------------------------------------
+            */
+
+            RestaurantsSeeder::class,       // 1️⃣ prvo lokali
+            RadnoVremeSeeder::class,       // 2️⃣ radno vreme po lokalu
+            RestaurantStatusSeeder::class, // 3️⃣ status restorana (open/closed)
+
+            /*
+            |--------------------------------------------------------------------------
+            | KORISNICI
+            |--------------------------------------------------------------------------
+            */
+
+            UserSeeder::class,              // 4️⃣ editor + admini + user
+
+            /*
+            |--------------------------------------------------------------------------
+            | PROIZVODI
+            |--------------------------------------------------------------------------
+            */
+
+            CategoriesTableSeeder::class,   // 5️⃣ kategorije
+            AddOnSeeder::class,             // 6️⃣ dodaci
+            ProductsTableSeeder::class,     // 7️⃣ proizvodi
+
+            /*
+            |--------------------------------------------------------------------------
+            | ❌ NE SEEDUJEMO PORUDŽBINE AUTOMATSKI
+            |--------------------------------------------------------------------------
+            | OrderProductSeeder nam treba samo za testiranje,
+            | NE u osnovnom seedingu.
+            */
 
         ]);
     }

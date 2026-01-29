@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\RestaurantProductStatus;
 
 class Product extends Model
 {
@@ -14,19 +15,22 @@ class Product extends Model
     protected $fillable = [
         'name',
         'description',
-        'price_delivery', // nova kolona
-        'price_takeaway', // nova kolona
+        'price_delivery',
+        'price_takeaway',
         'image_path',
-        'category_id', // veza sa kategorijom
+        'category_id',
     ];
 
     /**
-     * Accessor za pravu cenu u zavisnosti od tipa porudžbine
+     * Accessor za cenu u zavisnosti od tipa porudžbine
      */
     public function getPriceAttribute()
     {
-        $type = session('order_type', 'delivery'); // default je delivery
-        return $type === 'takeaway' ? $this->price_takeaway : $this->price_delivery;
+        $type = session('order_type', 'delivery');
+
+        return $type === 'takeaway'
+            ? $this->price_takeaway
+            : $this->price_delivery;
     }
 
     /**
@@ -42,7 +46,8 @@ class Product extends Model
      */
     public function orders()
     {
-        return $this->belongsToMany(Order::class, 'order_product')->withPivot('quantity');
+        return $this->belongsToMany(Order::class, 'order_product')
+            ->withPivot('quantity');
     }
 
     /**
@@ -54,10 +59,47 @@ class Product extends Model
     }
 
     /**
-     * Veza sa dodacima (many-to-many)
+     * Veza sa dodacima
      */
     public function addOns()
     {
-        return $this->belongsToMany(\App\Models\AddOn::class, 'product_add_on');
+        return $this->belongsToMany(AddOn::class, 'product_add_on');
+    }
+
+    /**
+     * Veza sa statusima proizvoda po lokalu
+     */
+    public function restaurantStatuses()
+    {
+        return $this->hasMany(
+            RestaurantProductStatus::class,
+            'product_id'
+        );
+    }
+
+    /**
+     * ===============================
+     * DOSTUPNOST PROIZVODA PO LOKALU
+     * ===============================
+     */
+    public function isAvailableForCurrentRestaurant(): bool
+    {
+        $restaurantId = session('restaurant_id');
+
+        // Ako nema izabranog lokala → dostupno
+        if (!$restaurantId) {
+            return true;
+        }
+
+        $status = RestaurantProductStatus::where('product_id', $this->id)
+            ->where('restaurant_id', $restaurantId)
+            ->first();
+
+        // Ako nema zapisa → PODRAZUMEVANO dostupno
+        if (!$status) {
+            return true;
+        }
+
+        return (bool) $status->is_available;
     }
 }

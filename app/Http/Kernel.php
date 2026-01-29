@@ -39,7 +39,11 @@ class Kernel extends HttpKernel
         'auth' => \App\Http\Middleware\Authenticate::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class, 
         'is_admin_or_editor' => \App\Http\Middleware\IsAdminOrEditor::class,
+        'restaurant.open' => \App\Http\Middleware\CheckRestaurantOpen::class,
+        'restaurant.selected' => \App\Http\Middleware\EnsureRestaurantSelected::class,
+
 
     ];
+    
 
 }

@@ -15,9 +15,6 @@ class OrderProduct extends Model
         'order_id',
         'product_id',
         'quantity',
-        'size',
-        'sos',
-        'meat',
         'details',
     ];
 
@@ -25,13 +22,15 @@ class OrderProduct extends Model
         'details' => 'array',
     ];
 
+    /* ========== RELACIJE ========== */
+
     public function product()
     {
-        return $this->belongsTo(Product::class, 'product_id');
+        return $this->belongsTo(Product::class);
     }
 
     public function order()
     {
-        return $this->belongsTo(Order::class, 'order_id');
+        return $this->belongsTo(Order::class);
     }
 }

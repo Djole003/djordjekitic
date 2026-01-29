@@ -1,57 +1,159 @@
-@extends('admin.layouts.app')
-@include('partials.header')
+@extends('admin.layouts.admin')
+
+@section('title', 'Proizvodi')
+@section('header-title', '📦 Proizvodi')
 
 @section('content')
-<div class="container product-list-container mt-4">
-    <h1 class="product-list-title">Lista proizvoda</h1>
+<div class="ap-page">
 
-    <a href="{{ route('admin.products.create') }}" class="btn btn-primary product-list-add-btn mb-3">Dodaj novi proizvod</a>
+    {{-- HEADER --}}
+    <div class="ap-header">
+        <h2>📦 Proizvodi</h2>
+
+        <a href="{{ route('admin.products.create') }}"
+           class="btn btn-primary">
+            + Dodaj proizvod
+        </a>
+    </div>
 
     @if(session('success'))
-        <div class="alert alert-success product-list-alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
     @endif
 
-    @if($products->count() > 0)
-    <table class="table product-list-table table-bordered table-striped">
-        <thead class="product-list-thead">
-            <tr>
-                <th class="product-list-th">ID</th>
-                <th class="product-list-th">Naziv</th>
-                <th class="product-list-th">Cena</th>
-                <th class="product-list-th">Kategorija</th>
-                <th class="product-list-th">Slika</th>
-                <th class="product-list-th">Akcije</th>
-            </tr>
-        </thead>
-        <tbody class="product-list-tbody">
-            @foreach($products as $product)
-            <tr class="product-list-tr">
-                <td class="product-list-td">{{ $product->id }}</td>
-                <td class="product-list-td">{{ $product->name }}</td>
-                <td class="product-list-td">{{ number_format($product->price, 2) }} RSD</td>
-                <td class="product-list-td">{{ $product->category }}</td>
-                <td class="product-list-td">
-                    @if($product->image_path)
-                        <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="product-list-img" width="70">
-                    @else
-                        Nema slike
-                    @endif
-                </td>
-                <td class="product-list-td">
-                    <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-warning btn-sm product-list-btn-edit">Izmeni</a>
-                    <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" style="display:inline-block;">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm product-list-btn-delete"
-                            onclick="return confirm('Da li ste sigurni da želite da obrišete proizvod?')">Obriši</button>
-                    </form>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    @else
-        <p class="product-list-no-products">Nema unetih proizvoda.</p>
-    @endif
+    {{-- TABLE --}}
+    <div class="ap-table-wrapper">
+        <table class="table table-hover ap-table">
+
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Naziv</th>
+                    <th>Cena</th>
+                    <th>Kategorija</th>
+                    <th>Slika</th>
+                    <th>Status</th>
+                    <th>Akcije</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            @forelse($products as $product)
+                <tr>
+                    <td>{{ $product->id }}</td>
+
+                    <td class="fw-semibold">
+                        {{ $product->name }}
+                    </td>
+
+                    <td>
+                        {{ number_format($product->price, 0) }} RSD
+                    </td>
+
+                    <td>
+                        {{ $product->category->name ?? '-' }}
+                    </td>
+
+                    <td>
+                        @if($product->image_path)
+                            <img src="{{ asset('storage/' . $product->image_path) }}"
+                                 class="ap-img"
+                                 alt="{{ $product->name }}">
+                        @else
+                            —
+                        @endif
+                    </td>
+
+                    <td>
+                        <button
+                            class="btn btn-sm toggle-availability-btn
+                            {{ $product->isAvailableForCurrentRestaurant() ? 'btn-success' : 'btn-danger' }}"
+                            data-id="{{ $product->id }}">
+                            {{ $product->isAvailableForCurrentRestaurant()
+                                ? 'Dostupno'
+                                : 'Nema na stanju' }}
+                        </button>
+                    </td>
+
+                    <td class="ap-actions">
+                        <a href="{{ route('admin.products.edit', $product->id) }}"
+                           class="btn btn-warning btn-sm">
+                            Izmeni
+                        </a>
+
+                        @if(auth()->user()->role === 'editor')
+                            <form action="{{ route('admin.products.destroy', $product->id) }}"
+                                  method="POST"
+                                  class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Obrisati proizvod?')">
+                                    Obriši
+                                </button>
+                            </form>
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7" class="text-center text-muted">
+                        Nema proizvoda
+                    </td>
+                </tr>
+            @endforelse
+            </tbody>
+
+        </table>
+    </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('click', function (e) {
+
+    const button = e.target.closest('.toggle-availability-btn');
+    if (!button) return;
+
+    // zaštita od duplog klika
+    if (button.dataset.loading === '1') return;
+    button.dataset.loading = '1';
+    button.disabled = true;
+
+    const productId = button.dataset.id;
+
+    fetch(`/admin/products/${productId}/toggle-availability`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+
+        if (typeof data.is_available === 'undefined') {
+            alert('Neispravan odgovor sa servera');
+            return;
+        }
+
+        button.classList.toggle('btn-success', data.is_available);
+        button.classList.toggle('btn-danger', !data.is_available);
+
+        button.textContent = data.is_available
+            ? 'Dostupno'
+            : 'Nema na stanju';
+    })
+    .catch(() => {
+        alert('Greška pri promeni statusa');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.dataset.loading = '0';
+    });
+});
+</script>
 @endsection

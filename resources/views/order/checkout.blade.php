@@ -3,6 +3,10 @@
 
 @section('content')
 
+@php
+    $orderType = session('order_type', 'delivery');
+@endphp
+
 <style>
 .checkout-wrapper {
     width: 100%;
@@ -11,7 +15,6 @@
     padding: 30px 15px;
     background: #f5f5f5;
 }
-
 .checkout-container {
     width: 100%;
     max-width: 900px;
@@ -19,30 +22,18 @@
     padding: 35px 45px;
     border-radius: 20px;
     box-shadow: 0 10px 35px rgba(0,0,0,0.08);
-    animation: fadeIn 0.5s ease;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
 .checkout-title {
     text-align: center;
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 30px;
-    color: #2c3e50;
 }
-
 .checkout-form label {
     font-weight: 600;
     margin-bottom: 6px;
     display: block;
-    color: #2c3e50;
 }
-
 .checkout-form input,
 .checkout-form textarea {
     width: 100%;
@@ -50,17 +41,7 @@
     border-radius: 10px;
     border: 1px solid #ccc;
     margin-bottom: 20px;
-    transition: 0.2s;
-    font-size: 1rem;
 }
-
-.checkout-form input:focus,
-.checkout-form textarea:focus {
-    outline: none;
-    border-color: #27ae60;
-    box-shadow: 0 0 8px rgba(39,174,96,0.3);
-}
-
 .summary-box {
     padding: 20px;
     border-radius: 15px;
@@ -68,151 +49,167 @@
     margin-top: 25px;
     border: 1px solid #eee;
 }
-
-.summary-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin-bottom: 15px;
-    color: #2c3e50;
-}
-
 .summary-item {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
     border-bottom: 1px solid #eee;
-    font-size: 1rem;
 }
-
-.summary-total {
-    margin-top: 15px;
-    font-size: 1.4rem;
+.grand-total {
+    margin-top: 10px;
+    font-size: 1.5rem;
     font-weight: 800;
     color: #27ae60;
     text-align: right;
 }
-
 .btn-finish {
     width: 100%;
     padding: 16px;
     font-size: 1.3rem;
     font-weight: 700;
     border-radius: 40px;
-    background: linear-gradient(90deg, #27ae60, #2ecc71);
+    background: #27ae60;
     border: none;
     color: white;
-    margin-top: 35px;
-    transition: 0.2s;
-}
-
-.btn-finish:hover {
-    background: linear-gradient(90deg, #219150, #27ae60);
-    transform: scale(1.02);
-    cursor: pointer;
-}
-
-@media(max-width: 768px) {
-    .checkout-container {
-        padding: 25px;
-    }
+    margin-top: 25px;
 }
 </style>
 
 <div class="checkout-wrapper">
-    <div class="checkout-container">
+<div class="checkout-container">
 
-        @php
-            $orderType = session('order_type', 'delivery'); // delivery ili takeaway
-        @endphp
+<h2 class="checkout-title">
+    {{ $orderType === 'delivery' ? 'Detalji za dostavu' : 'Lično preuzimanje' }}
+</h2>
 
-        <h2 class="checkout-title">
-            @if($orderType === 'delivery')
-                Detalji za dostavu
-            @else
-                Lično preuzimanje
-            @endif
-        </h2>
+<form action="{{ route('order.submit') }}" method="POST" class="checkout-form">
+@csrf
 
-        <form action="{{ route('order.submit') }}" method="POST" class="checkout-form">
-            @csrf
+{{-- IME --}}
+<label>Ime i prezime</label>
+<input type="text" name="ime" required
+       value="{{ old('ime', auth()->user()->name ?? '') }}">
 
-            <label>Ime i prezime</label>
-            <input type="text" name="ime" required
-                   placeholder="Unesite ime i prezime"
-                   value="{{ old('ime', auth()->user()->name ?? '') }}">
+{{-- TELEFON + ADRESA SAMO ZA DELIVERY --}}
+@if($orderType === 'delivery')
 
-            @if($orderType === 'delivery')
-                <label>Broj telefona</label>
-                <input type="text" name="telefon" required
-                       placeholder="065 123 4567"
-                       value="{{ old('telefon', auth()->user()->telefon ?? '') }}">
+<label>Broj telefona</label>
+<input type="text" name="telefon" required
+       value="{{ old('telefon', auth()->user()->telefon ?? '') }}">
 
-                <label>Adresa dostave</label>
-                <input type="text" name="adresa" required
-                       placeholder="Ulica i broj, sprat, zvono..."
-                       value="{{ old('adresa', auth()->user()->adresa ?? '') }}">
-            @endif
+<label>Adresa dostave</label>
+<input type="text" name="adresa" id="addressInput" required
+       value="{{ old('adresa', auth()->user()->adresa ?? '') }}">
 
-            <label>Napomena (opciono)</label>
-            <textarea name="napomena" rows="3" placeholder="Npr. dodatno ljuto, ne zvoni...">{{ old('napomena') }}</textarea>
+<button type="button" id="confirmAddressBtn"
+        class="btn btn-outline-primary w-100 mb-2">
+📍 Potvrdi adresu
+</button>
 
-            {{-- Pregled porudžbine --}}
-            <div class="summary-box">
-                <div class="summary-title">Pregled porudžbine</div>
+<div id="delivery-info" class="alert alert-info d-none">
+🚚 Zona: <strong id="zone-name"></strong><br>
+Cena dostave: <strong id="delivery-price"></strong> RSD
+</div>
 
-                @php $total = 0; @endphp
+<div id="delivery-error" class="alert alert-danger d-none"></div>
 
-                @foreach(session('cart', []) as $item)
-                    @php
-                        $product = \App\Models\Product::find($item['product_id']);
-                        $details = $item['details'] ?? [];
-                        $addonIds = $details['addons'] ?? [];
+<input type="hidden" name="delivery_price" id="delivery_price" value="0">
 
-                        // Osnovna cena po tipu porudžbine
-                        $basePrice = $orderType === 'delivery'
-                            ? $product->price_delivery
-                            : $product->price_takeaway;
+@endif
 
-                        // Velika porcija
-                        if(($details['size'] ?? null) === 'velika') {
-                            $basePrice += 200;
-                        }
+{{-- NAPOMENA --}}
+<label>Napomena (opciono)</label>
+<textarea name="napomena" rows="3"
+placeholder="Npr. stižem za 15 minuta..."></textarea>
 
-                        // Dodaci
-                        $addonsPrice = 0;
-                        $addonsList = [];
-                        if(!empty($addonIds)) {
-                            $addons = \App\Models\AddOn::whereIn('id', $addonIds)->get();
-                            foreach($addons as $addon) {
-                                $addonsPrice += $addon->price;
-                                $addonsList[] = $addon->name;
-                            }
-                        }
+{{-- PREGLED --}}
+<div class="summary-box">
+    <div class="summary-item">
+        <span>Međuzbir</span>
+        <span id="productsTotal">{{ $productsTotal }} RSD</span>
+    </div>
 
-                        $totalItemPrice = ($basePrice + $addonsPrice) * $item['quantity'];
-                        $total += $totalItemPrice;
-                    @endphp
+    @if($orderType === 'delivery')
+    <div class="summary-item d-none" id="deliveryRow">
+        <span>Dostava</span>
+        <span>+ <span id="deliveryRowPrice">0</span> RSD</span>
+    </div>
+    @endif
 
-                    <div class="summary-item">
-                        <span>
-                            {{ $product->name }} × {{ $item['quantity'] }}
-                            @if(!empty($addonsList))
-                                <br><small>Dodaci: {{ implode(', ', $addonsList) }}</small>
-                            @endif
-                        </span>
-                        <span>{{ $totalItemPrice }} RSD</span>
-                    </div>
-                @endforeach
-
-                <div class="summary-total">
-                    Ukupno: {{ $total }} RSD
-                </div>
-            </div>
-
-            <button type="submit" class="btn-finish">Potvrdi porudžbinu (Gotovina)</button>
-        </form>
-
+    <div class="grand-total">
+        Ukupno za plaćanje:
+        <span id="grandTotal">{{ $productsTotal }}</span> RSD
     </div>
 </div>
 
+<button type="submit"
+        id="submitOrderBtn"
+        class="btn-finish"
+        {{ $orderType === 'delivery' ? 'disabled' : '' }}>
+Potvrdi porudžbinu
+</button>
+
+</form>
+</div>
+</div>
+
 @endsection
+
+{{-- JS SAMO ZA DELIVERY --}}
+@if($orderType === 'delivery')
+@section('scripts')
+<script>
+const confirmBtn = document.getElementById('confirmAddressBtn');
+const submitBtn = document.getElementById('submitOrderBtn');
+const addressInput = document.getElementById('addressInput');
+
+const zoneBox = document.getElementById('delivery-info');
+const zoneName = document.getElementById('zone-name');
+const deliveryPriceBox = document.getElementById('delivery-price');
+const deliveryPriceInput = document.getElementById('delivery_price');
+const errorBox = document.getElementById('delivery-error');
+
+const productsTotal = {{ $productsTotal }};
+const grandTotalBox = document.getElementById('grandTotal');
+const deliveryRow = document.getElementById('deliveryRow');
+const deliveryRowPrice = document.getElementById('deliveryRowPrice');
+
+confirmBtn.addEventListener('click', () => {
+    fetch("{{ route('delivery.check') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({ address: addressInput.value })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            zoneBox.classList.remove('d-none');
+            errorBox.classList.add('d-none');
+
+            zoneName.innerText = data.zone;
+            deliveryPriceBox.innerText = data.price;
+            deliveryPriceInput.value = data.price;
+
+            deliveryRow.classList.remove('d-none');
+            deliveryRowPrice.innerText = data.price;
+
+            grandTotalBox.innerText = productsTotal + parseInt(data.price);
+            submitBtn.disabled = false;
+        } else {
+            zoneBox.classList.add('d-none');
+            errorBox.classList.remove('d-none');
+            errorBox.innerText = data.message;
+
+            deliveryRow.classList.add('d-none');
+            grandTotalBox.innerText = productsTotal;
+            submitBtn.disabled = true;
+        }
+    });
+});
+</script>
+@endsection
+@endif

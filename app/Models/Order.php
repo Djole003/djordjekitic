@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\AddOn; // ⬅⬅⬅ OVO JE FALILO
 
 class Order extends Model
 {
@@ -15,65 +16,70 @@ class Order extends Model
         'total_price',
         'delivery_info',
         'order_type',
-        'ime',
-        'telefon',
-        'adresa',
-        'napomena',
+        'delivery_zone',
+        'delivery_price',
+        'cutlery',
     ];
+
+    protected $casts = [
+        'delivery_info' => 'array',
+    ];
+
+    /* ================= RELACIJE ================= */
 
     public function orderProducts()
     {
-        return $this->hasMany(OrderProduct::class, 'order_id');
+        return $this->hasMany(OrderProduct::class);
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
+    /* ================= LOGIKA ================= */
+
     /**
-     * Računa ukupnu cenu porudžbine na osnovu tipa porudžbine i opcija
+     * Računa ukupnu cenu porudžbine
      */
-    public function calculateTotalPrice()
+    public function calculateTotalPrice(): float
     {
-        // Učitaj relacije ako već nisu
+        // učitaj relacije ako nisu već
         $this->loadMissing('orderProducts.product');
 
-        $totalPrice = 0;
+        $total = 0;
         $orderType = $this->order_type ?? 'delivery';
 
-        foreach ($this->orderProducts as $orderItem) {
-            $product = $orderItem->product;
-            if (!$product) continue;
+        foreach ($this->orderProducts as $item) {
+            if (!$item->product) continue;
 
-            // Osnovna cena po tipu porudžbine
-            $price = $orderType === 'delivery' ? $product->price_delivery : $product->price_takeaway;
+            // osnovna cena
+            $price = $orderType === 'delivery'
+                ? $item->product->price_delivery
+                : $item->product->price_takeaway;
 
-            // Dekodiraj details JSON
-            $details = json_decode($orderItem->details, true) ?? [];
+            $details = $item->details ?? [];
 
-            // Velika porcija
+            // veličina
             if (($details['size'] ?? null) === 'velika') {
                 $price += 200;
             }
 
-            // Dodaci iz baze
-            $addonsPrice = 0;
-            $addonIds = $details['addons'] ?? [];
-            if (!empty($addonIds)) {
-                $addons = \App\Models\AddOn::whereIn('id', $addonIds)->get();
-                foreach ($addons as $addon) {
-                    $addonsPrice += $addon->price;
-                }
+            // dodaci
+            if (!empty($details['addons'])) {
+                $addonsTotal = AddOn::whereIn('id', $details['addons'])
+                    ->sum('price');
+                $price += $addonsTotal;
             }
 
-            $totalPrice += ($price + $addonsPrice) * $orderItem->quantity;
+            $total += $price * $item->quantity;
         }
 
-        return $totalPrice;
+        // dostava
+        if ($this->order_type === 'delivery') {
+            $total += $this->delivery_price ?? 0;
+        }
+
+        return $total;
     }
-
-
-
-
 }
