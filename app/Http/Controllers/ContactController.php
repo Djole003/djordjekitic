@@ -4,41 +4,48 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Review;
+use App\Models\RestaurantContact;
 use Illuminate\Support\Facades\Auth;
-
 
 class ContactController extends Controller
 {
-    // Prikaz kontakt stranice sa mapom i formom
+    /**
+     * Prikaz kontakt stranice – PO LOKALU
+     */
     public function show()
     {
-        // Možeš ovde poslati neke kontakt podatke ako želiš
-        $contactData = [
-            'phone' => '+381 65 123 4567',
-            'email' => 'misterwang@gmail.com',
-            'address' => 'Borska 45i',
-        ];
+        $restaurantId = session('restaurant_id');
 
-        // Uzmi sve recenzije da ih prikažeš ako želiš (nije obavezno)
+        // zaštita ako neko uđe bez lokala
+        if (!$restaurantId) {
+            return redirect()->route('select.restaurant');
+        }
+
+        // uzimamo kontakt SAMO tog lokala
+        $contact = RestaurantContact::where('restaurant_id', $restaurantId)->first();
+
+        // recenzije ostaju globalne (ili kasnije možeš po lokalu)
         $reviews = Review::latest()->take(5)->get();
 
-        return view('contact.contact', compact('contactData', 'reviews'));
+        return view('contact.contact', compact('contact', 'reviews'));
     }
 
-    // Čuvanje recenzije poslata kroz formu
+    /**
+     * Čuvanje recenzije
+     */
     public function submitReview(Request $request)
     {
         $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
+            'rating'  => 'required|integer|min:1|max:5',
             'message' => 'required|string|max:1000',
         ]);
 
         Review::create([
             'user_id' => Auth::id(),
-            'rating' => $request->input('rating'),
-            'comment' => $request->input('message'),
+            'rating'  => $request->rating,
+            'comment' => $request->message,
         ]);
 
         return redirect()->back()->with('success', 'Hvala na recenziji!');
-    }   
+    }
 }

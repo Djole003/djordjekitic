@@ -2,9 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+
 use App\Http\Middleware\EnsureRestaurantSelected;
 use App\Http\Middleware\RestrictAdminToRestaurant;
-
 
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
@@ -15,30 +15,26 @@ use App\Http\Controllers\RestaurantSelectController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\RestaurantStatusController;
 
 require __DIR__.'/auth.php';
 
 
-
 /*
 |--------------------------------------------------------------------------
-| ROOT (/) – IZBOR LOKALA
+| ROOT – IZBOR LOKALA
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
 
-    // Ako je ulogovan ADMIN → nema šta da traži ovde
-    if (
-        auth()->check() &&
-        auth()->user()->role === 'admin'
-    ) {
-        return redirect()->route('index'); // /pocetna
+    if (auth()->check() && auth()->user()->role === 'admin') {
+        return redirect()->route('index');
     }
 
-    // Sve ostalo (gost + editor)
-    return app(\App\Http\Controllers\RestaurantSelectController::class)->index();
+    return app(RestaurantSelectController::class)->index();
 
 })->name('select.restaurant');
+
 
 Route::post('/izaberi-lokal', function () {
 
@@ -46,45 +42,34 @@ Route::post('/izaberi-lokal', function () {
         return redirect()->route('index');
     }
 
-    return app(\App\Http\Controllers\RestaurantSelectController::class)->select(
-        request()
-    );
+    return app(RestaurantSelectController::class)->select(request());
 
 })->name('select.restaurant.store');
 
 
-
 /*
 |--------------------------------------------------------------------------
-| CELOKUPAN SAJT – ZAKLJUČAN DOK SE NE IZABERE LOKAL
+| CELOKUPAN SAJT – MORA BITI IZABRAN LOKAL
 |--------------------------------------------------------------------------
 */
 Route::middleware([EnsureRestaurantSelected::class])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | POČETNA STRANA SAJTA
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/pocetna', [ProductController::class, 'index'])
-        ->name('index');
-
-    /*
-    |--------------------------------------------------------------------------
     | JAVNI DEO
     |--------------------------------------------------------------------------
     */
-    Route::get('/jela/{id}', [ProductController::class, 'showWithSuggestions'])
-        ->name('dish.showWithSuggestions');
+    Route::get('/pocetna', [ProductController::class, 'index'])->name('index');
 
-    Route::get('/jelovnik', [ProductController::class, 'jelovnikPoKategorijama'])
-        ->name('jelovnik');
+    Route::get('/jelovnik', [ProductController::class, 'jelovnikPoKategorijama'])->name('jelovnik');
 
     Route::get('/jelovnik/kategorija/{slug}', [ProductController::class, 'showCategory'])
         ->name('jelovnik.kategorija');
 
-    Route::get('/kontakt', [ContactController::class, 'show'])
-        ->name('contact.show');
+    Route::get('/jela/{id}', [ProductController::class, 'showWithSuggestions'])
+        ->name('dish.showWithSuggestions');
+
+    Route::get('/kontakt', [ContactController::class, 'show'])->name('contact.show');
 
     Route::post('/kontakt/recenzija', [ContactController::class, 'submitReview'])
         ->name('contact.review.submit');
@@ -95,39 +80,37 @@ Route::middleware([EnsureRestaurantSelected::class])->group(function () {
     | KORPA / PORUDŽBINE
     |--------------------------------------------------------------------------
     */
-    Route::get('/korpa', [OrderController::class, 'showCart'])
-        ->name('order.cart');
+    Route::get('/korpa', [OrderController::class, 'showCart'])->name('order.cart');
 
-    Route::post('/cart/add', [OrderController::class, 'addToCart'])
-        ->name('cart.add');
+    Route::post('/cart/add', [OrderController::class, 'addToCart'])->name('cart.add');
 
     Route::delete('/korpa/ukloni/{index}', [OrderController::class, 'removeFromOrder'])
         ->name('order.remove');
 
-    Route::get('/checkout', [OrderController::class, 'checkout'])
-        ->name('order.checkout');
+    Route::get('/checkout', [OrderController::class, 'checkout'])->name('order.checkout');
 
     Route::post('/poruci/zavrsi', [OrderController::class, 'submitOrder'])
-        ->middleware('restaurant.open')
         ->name('order.submit');
 
-    Route::get('/thankyou', [OrderController::class, 'thankyou'])
-        ->name('order.thankyou');
+    Route::get('/thankyou', [OrderController::class, 'thankyou'])->name('order.thankyou');
 
 
     /*
     |--------------------------------------------------------------------------
-    | TIP PORUDŽBINE / DOSTAVA
+    | TIP PORUDŽBINE
     |--------------------------------------------------------------------------
     */
     Route::get('/select-order-type/{type}', function ($type) {
+
         if (!in_array($type, ['delivery', 'takeaway'])) {
             $type = 'delivery';
         }
 
         session(['order_type' => $type]);
+
         return response()->json(['status' => 'ok']);
     });
+
 
     Route::post('/check-delivery-zone', [OrderController::class, 'checkDeliveryZone'])
         ->name('delivery.zone.check');
@@ -138,13 +121,11 @@ Route::middleware([EnsureRestaurantSelected::class])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | ADMIN PANEL – EDITOR 
+    | EDITOR – PROMENA LOKALA
     |--------------------------------------------------------------------------
     */
-
     Route::post('/switch-restaurant', function (\Illuminate\Http\Request $request) {
 
-        // samo editor
         if (auth()->user()->role !== 'editor') {
             abort(403);
         }
@@ -153,38 +134,37 @@ Route::middleware([EnsureRestaurantSelected::class])->group(function () {
             'restaurant_id' => 'required|exists:restaurants,id'
         ]);
 
-        session([
-            'restaurant_id' => $request->restaurant_id
-        ]);
+        session(['restaurant_id' => $request->restaurant_id]);
 
         return back();
 
     })->name('admin.switchRestaurant');
 
 
-    Route::middleware([
-        'auth',
-        'role:editor' // 👈 SAMO TI
-    ])
-    ->prefix('admin')
-    ->name('admin.')
-    ->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN PANEL – EDITOR
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['auth', 'role:editor'])
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
 
-        Route::get('/users', [AdminUserController::class, 'index'])
-            ->name('users.index');
+            Route::get('/users', [AdminUserController::class, 'index'])
+                ->name('users.index');
 
-        Route::post('/users/{id}/role', [AdminUserController::class, 'updateRole'])
-            ->name('users.updateRole');
+            Route::post('/users/{id}/role', [AdminUserController::class, 'updateRole'])
+                ->name('users.updateRole');
 
-        Route::post('/users/{id}/toggle-active', [AdminUserController::class, 'toggleActive'])
-            ->name('users.toggleActive');
-    });
-
+            Route::post('/users/{id}/toggle-active', [AdminUserController::class, 'toggleActive'])
+                ->name('users.toggleActive');
+        });
 
 
     /*
     |--------------------------------------------------------------------------
-    | ADMIN PANEL – EDITOR + ADMIN
+    | ADMIN PANEL – ADMIN + EDITOR
     |--------------------------------------------------------------------------
     */
     Route::middleware([
@@ -196,22 +176,28 @@ Route::middleware([EnsureRestaurantSelected::class])->group(function () {
     ->name('admin.')
     ->group(function () {
 
+        // ✅ DASHBOARD — VEZAN ZA SESSION RESTAURANT
         Route::get('/dashboard', function () {
-            $restaurantOpen = DB::table('restaurant_status')->value('is_open');
+
+            $restaurantId = session('restaurant_id');
+
+            $restaurantOpen = DB::table('restaurant_status')
+                ->where('restaurant_id', $restaurantId)
+                ->value('is_open');
+
             return view('admin.dashboard', compact('restaurantOpen'));
+
         })->name('dashboard');
 
 
-        // STATUS RESTORANA
-        Route::post('/restaurant/toggle', [\App\Http\Controllers\Admin\RestaurantStatusController::class, 'toggle'])
+        // ✅ OTVORI / ZATVORI RESTORAN
+        Route::post('/restaurant/toggle', [RestaurantStatusController::class, 'toggle'])
             ->name('restaurant.toggle');
 
-        // FCM
-        Route::post('/save-fcm-token', [\App\Http\Controllers\Admin\AdminFcmController::class, 'store'])
-            ->name('admin.fcm.store');
 
         // PRODUCTS
         Route::resource('products', AdminProductController::class);
+
         Route::post(
             'products/{product}/toggle-availability',
             [AdminProductController::class, 'toggleAvailability']
@@ -233,10 +219,9 @@ Route::middleware([EnsureRestaurantSelected::class])->group(function () {
     });
 
 
-
     /*
     |--------------------------------------------------------------------------
-    | KORISNIK – NARUDŽBINE
+    | KORISNIK
     |--------------------------------------------------------------------------
     */
     Route::middleware(['auth'])->group(function () {

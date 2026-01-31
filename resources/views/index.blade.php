@@ -4,6 +4,7 @@
 {{-- =======================
    HERO SECTION
 ======================= --}}
+
 <section class="hero position-relative">
     <div class="hero-image"
          style="background-image: url('{{ asset('assets/hero.jpg') }}'); height: 70vh; background-size: cover; background-position: center;">

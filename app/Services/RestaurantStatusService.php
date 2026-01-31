@@ -2,48 +2,53 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
-use App\Models\RadnoVreme;
-use Illuminate\Support\Facades\DB;
+use App\Models\DeliveryZone;
 
-class RestaurantStatusService
+class DeliveryZoneService
 {
-    public static function isOpen(): bool
+    public function getZoneForCoordinates($lat, $lng)
     {
         $restaurantId = session('restaurant_id');
 
-        // Ako nema izabranog lokala → NE MOŽE PORUDŽBINA
         if (!$restaurantId) {
-            return false;
+            return null;
         }
 
-        /**
-         * 1️⃣ RUČNI STATUS (admin / editor)
-         */
-        $globalStatus = DB::table('restaurant_status')
-            ->where('restaurant_id', $restaurantId)
-            ->value('is_open');
+        $zones = DeliveryZone::where('restaurant_id', $restaurantId)->get();
 
-        // Ako nema reda → podrazumevano OTVOREN
-        if ($globalStatus === null) {
-            $globalStatus = 1;
+        foreach ($zones as $zone) {
+
+            $distance = $this->calculateDistance(
+                $lat,
+                $lng,
+                $zone->center_lat,
+                $zone->center_lng
+            );
+
+            if ($distance <= $zone->radius) {
+                return [
+                    'name'  => $zone->name,
+                    'price' => $zone->price,
+                ];
+            }
         }
 
-        if (!$globalStatus) {
-            return false;
-        }
+        return null;
+    }
 
-        /**
-         * 2️⃣ RADNO VREME
-         */
-        $now = Carbon::now('Europe/Belgrade');
-        $dan = $now->dayOfWeek; // 0–6
-        $vreme = $now->format('H:i:s');
+    private function calculateDistance($lat1, $lng1, $lat2, $lng2)
+    {
+        $earthRadius = 6371000;
 
-        return RadnoVreme::where('restaurant_id', $restaurantId)
-            ->where('dan', $dan)
-            ->where('otvara_se', '<=', $vreme)
-            ->where('zatvara_se', '>=', $vreme)
-            ->exists();
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+
+        $a =
+            sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) *
+            cos(deg2rad($lat2)) *
+            sin($dLng / 2) * sin($dLng / 2);
+
+        return $earthRadius * (2 * atan2(sqrt($a), sqrt(1 - $a)));
     }
 }

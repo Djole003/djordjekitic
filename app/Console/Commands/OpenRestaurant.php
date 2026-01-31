@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
+use App\Models\Restaurant;
 
 class OpenRestaurant extends Command
 {
@@ -12,9 +12,8 @@ class OpenRestaurant extends Command
 
     public function handle()
     {
-        DB::table('restaurant_status')->update([
-            'is_open' => true,
-            'updated_at' => now(),
+        Restaurant::query()->update([
+            'is_active' => true
         ]);
 
         $this->info('✅ Restoran je OTVOREN');

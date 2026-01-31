@@ -5,6 +5,6 @@
     <div class="container mt-5">
         <h1>Hvala na porudžbini!</h1>
         <p>Vaša porudžbina je uspešno primljena.</p>
-        <a href="{{ url('/') }}" class="btn btn-primary">Vrati se na početnu</a>
+        <a href="{{ url('/pocetna') }}" class="btn btn-primary">Vrati se na početnu</a>
     </div>
 @endsection

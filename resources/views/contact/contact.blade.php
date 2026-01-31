@@ -6,13 +6,13 @@
 
     {{-- SEO H1 --}}
     <h1 class="contact-title">
-        Kontakt – Mister Wang kineski restoran Beograd
+        Kontakt – Mister Wang {{ $contact->restaurant->name ?? '' }}
     </h1>
 
     {{-- SEO opis --}}
     <p style="max-width:720px; margin:0 auto 30px; color:#555; font-size:0.95rem; text-align:center;">
-        Kontaktirajte kineski restoran Mister Wang u Beogradu.
-        Poručite hranu, proverite radno vreme ili ostavite recenziju.
+        Kontaktirajte kineski restoran Mister Wang – {{ $contact->restaurant->name ?? '' }}.
+        Proverite radno vreme, lokaciju i dostavu.
     </p>
 
     {{-- Kontakt kartice --}}
@@ -22,8 +22,7 @@
             <i class="fas fa-phone-alt contact-icon"></i>
             <div>
                 <h2 style="font-size:1.1rem;">Telefon</h2>
-                <p>+381 64 52 14 800</p>
-                <p>+381 64 52 14 802</p>
+                <p>{{ $contact->phone }}</p>
             </div>
         </div>
 
@@ -31,7 +30,7 @@
             <i class="fas fa-envelope contact-icon"></i>
             <div>
                 <h2 style="font-size:1.1rem;">Email</h2>
-                <p>djordjekitic2003@gmail.com</p>
+                <p>{{ $contact->email ?? '—' }}</p>
             </div>
         </div>
 
@@ -39,7 +38,7 @@
             <i class="fas fa-map-marker-alt contact-icon"></i>
             <div>
                 <h2 style="font-size:1.1rem;">Adresa</h2>
-                <p>Borska 45i, Beograd</p>
+                <p>{{ $contact->address }}</p>
             </div>
         </div>
 
@@ -47,19 +46,17 @@
 
     {{-- Radno vreme --}}
     <div class="working-hours mb-4">
-        <h2 style="font-size:1.2rem;">Radno vreme restorana</h2>
-        <p>Radnim danima: 9–22h</p>
-        <p>Nedelja: 11–20h</p>
-        <p>Subota: Ne radimo</p>
+        <h2 style="font-size:1.2rem;">Radno vreme</h2>
+        <p>{{ $contact->working_hours ?? 'Radno vreme nije definisano.' }}</p>
     </div>
 
     {{-- Mapa --}}
     <div class="map-container mb-4">
         <h2 style="font-size:1.2rem;">
-            Lokacija restorana Mister Wang – Beograd
+            Lokacija restorana {{ $contact->restaurant->name }}
         </h2>
         <p style="font-size:0.9rem; color:#666;">
-            Dostava hrane dostupna po zonama u Beogradu. Pogledajte mapu ispod.
+            Dostava hrane dostupna po zonama za izabrani lokal.
         </p>
         <div id="map"></div>
     </div>
@@ -77,16 +74,14 @@
                     <select id="rating" name="rating" required>
                         <option value="">-- Odaberi ocenu --</option>
                         @for($i = 1; $i <= 5; $i++)
-                            <option value="{{ $i }}" {{ old('rating') == $i ? 'selected' : '' }}>{{ $i }}</option>
+                            <option value="{{ $i }}">{{ $i }}</option>
                         @endfor
                     </select>
-                    @error('rating') <div class="error-msg">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="mb-2">
                     <label for="message">Poruka:</label><br>
-                    <textarea id="message" name="message" rows="4" required>{{ old('message') }}</textarea>
-                    @error('message') <div class="error-msg">{{ $message }}</div> @enderror
+                    <textarea id="message" name="message" rows="4" required></textarea>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Pošalji</button>
@@ -103,83 +98,60 @@
     <div class="user-reviews mt-4">
         <h2 style="font-size:1.2rem;">Iskustva korisnika</h2>
 
-        @if($reviews->isEmpty())
+        @forelse($reviews as $review)
+            <div class="review-card">
+                <strong>{{ $review->user->name ?? 'Nepoznat korisnik' }}</strong>
+                <span class="review-date">
+                    ({{ $review->created_at->format('d.m.Y') }})
+                </span><br>
+                <em>Ocena: {{ $review->rating }}/5</em>
+                <p>{{ $review->comment }}</p>
+            </div>
+        @empty
             <p>Još uvek nema recenzija.</p>
-        @else
-            @foreach($reviews as $review)
-                <div class="review-card">
-                    <strong>{{ $review->user->name ?? 'Nepoznat korisnik' }}</strong>
-                    <span class="review-date">
-                        ({{ $review->created_at->format('d.m.Y') }})
-                    </span><br>
-                    <em>Ocena: {{ $review->rating }}/5</em>
-                    <p>{{ $review->comment }}</p>
-                </div>
-            @endforeach
-        @endif
+        @endforelse
     </div>
 
 </div>
 
-
-{{-- Leaflet mapa --}}
+{{-- Leaflet --}}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-    var center = [44.75719879366028, 20.459915494039834];
 
-    var map = L.map('map').setView(center, 12);
+<script>
+    const center = [
+        {{ $contact->restaurant->center_lat }},
+        {{ $contact->restaurant->center_lng }}
+    ];
+
+    const map = L.map('map').setView(center, 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // 🟢 ZELENA – 0–2 km
-    L.circle(center, {
-        color: 'green',
-        fillColor: 'green',
-        fillOpacity: 0.25,
-        radius: 2000
-    }).addTo(map).bindPopup("🟢 Zelena zona<br>100 RSD");
+    // 🟢
+    L.circle(center, { color:'green', fillOpacity:0.25, radius:2000 })
+        .addTo(map).bindPopup("🟢 Zelena zona – 100 RSD");
 
-    // 🟡 ŽUTA – 2–4 km
-    L.circle(center, {
-        color: 'yellow',
-        fillColor: 'yellow',
-        fillOpacity: 0.25,
-        radius: 4000
-    }).addTo(map).bindPopup("🟡 Žuta zona<br>150 RSD");
+    // 🟡
+    L.circle(center, { color:'yellow', fillOpacity:0.25, radius:4000 })
+        .addTo(map).bindPopup("🟡 Žuta zona – 150 RSD");
 
-    // 🟠 NARANDŽASTA – 4–6 km
-    L.circle(center, {
-        color: 'orange',
-        fillColor: 'orange',
-        fillOpacity: 0.25,
-        radius: 6000
-    }).addTo(map).bindPopup("🟠 Narandžasta zona<br>200 RSD");
+    // 🟠
+    L.circle(center, { color:'orange', fillOpacity:0.25, radius:6000 })
+        .addTo(map).bindPopup("🟠 Narandžasta zona – 200 RSD");
 
-    // 🔴 CRVENA – 6–8.5 km (Resnik, Sremčica)
-    L.circle(center, {
-        color: 'red',
-        fillColor: 'red',
-        fillOpacity: 0.25,
-        radius: 8500
-    }).addTo(map).bindPopup("🔴 Crvena zona<br>250 RSD");
+    // 🔴
+    L.circle(center, { color:'red', fillOpacity:0.25, radius:8500 })
+        .addTo(map).bindPopup("🔴 Crvena zona – 250 RSD");
 
-    // 📍 Marker restorana
-    L.marker(center).addTo(map)
-        .bindPopup("<b>Mister Wang</b><br>Borska 45i, Beograd")
+    L.marker(center)
+        .addTo(map)
+        .bindPopup("<b>{{ $contact->restaurant->name }}</b><br>{{ $contact->address }}")
         .openPopup();
 </script>
 
-
-
-
-
-
 @include('partials.footer')
-
 @endsection
-
-

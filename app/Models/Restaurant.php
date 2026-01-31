@@ -15,4 +15,16 @@ class Restaurant extends Model
         'image_path',
         'is_active',
     ];
+
+    public function isOpen()
+    {
+        // ADMIN ima glavnu kontrolu
+        if (!$this->is_active) {
+            return false;
+        }
+
+        // ako je aktivan → radi
+        return true;
+    }
+
 }

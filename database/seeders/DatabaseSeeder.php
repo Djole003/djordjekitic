@@ -20,9 +20,10 @@ class DatabaseSeeder extends Seeder
             */
 
             RestaurantsSeeder::class,       // 1️⃣ prvo lokali
+            RestaurantContactsSeeder::class,
             RadnoVremeSeeder::class,       // 2️⃣ radno vreme po lokalu
             RestaurantStatusSeeder::class, // 3️⃣ status restorana (open/closed)
-
+            DeliveryZonesSeeder::class,
             /*
             |--------------------------------------------------------------------------
             | KORISNICI

@@ -16,7 +16,11 @@
     $info = $info ?? [];
 @endphp
 
-<div class="card mb-3 shadow-sm {{ $border }}">
+<div class="card mb-3 shadow-sm {{ $border }} order-card"
+     data-order-id="{{ $order->id }}"
+     data-status="{{ $order->status }}">
+
+
 
     {{-- HEADER --}}
     <div class="card-header d-flex justify-content-between align-items-center">
