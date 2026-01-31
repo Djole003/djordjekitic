@@ -20,6 +20,7 @@ class CategoriesTableSeeder extends Seeder
             ['name' => 'Dezerti', 'image' => 'assets/poh_ananas.jpg'],
             ['name' => 'Jela sa mesom', 'image' => 'assets/susam_pile.jpg'],
             ['name' => 'Piće', 'image' => 'assets/kategorija_pice.jpg'],
+            ['name' => 'Akcije', 'image' => 'assets/susam-akcija.PNG'],
         ];
 
         foreach ($categories as $cat) {

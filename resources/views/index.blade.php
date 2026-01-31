@@ -1,11 +1,19 @@
 @extends('layouts.app')
 @include('partials.header')
 
+@section('content')
+
+
 {{-- =======================
    HERO SECTION
 ======================= --}}
 
-<section class="hero position-relative">
+<section class="hero position-relative"
+    style="
+        border-bottom: 6px solid #ffd600;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.35);
+    "
+>
     <div class="hero-image"
          style="background-image: url('{{ asset('assets/hero.jpg') }}'); height: 70vh; background-size: cover; background-position: center;">
         <div class="hero-overlay d-flex flex-column justify-content-center align-items-center text-white text-center h-100"
@@ -29,10 +37,117 @@
 </section>
 
 {{-- =======================
+   AKCIJA – PRIVREMENI REDIRECT
+======================= --}}
+<section
+    style="
+        background: linear-gradient(135deg, #b31217, #e52d27);
+        padding: 80px 20px;
+        color: white;
+        margin-top: -5px;
+        border-top: 6px solid #ffd600;
+        border-bottom: 6px solid #ffd600;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    "
+>
+    <div
+        style="
+            max-width: 1200px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+            flex-wrap: wrap;
+        "
+    >
+        {{-- TEKST --}}
+        <div style="max-width: 520px;">
+            <div
+                style="
+                    display: inline-block;
+                    background: #ffd600;
+                    color: #000;
+                    padding: 6px 18px;
+                    border-radius: 30px;
+                    font-weight: 700;
+                    margin-bottom: 18px;
+                "
+            >
+                🔥 SPECIJALNA AKCIJA
+            </div>
+
+            <h2
+                style="
+                    font-size: 42px;
+                    font-weight: 900;
+                    margin-bottom: 15px;
+                    line-height: 1.2;
+                "
+            >
+                Susam piletina + Coca-Cola
+            </h2>
+
+            <p
+                style="
+                    font-size: 18px;
+                    margin-bottom: 28px;
+                    line-height: 1.6;
+                "
+            >
+                Sočna susam piletina uz osvežavajuću Coca-Colu
+                po specijalnoj ceni. Ograničena ponuda!
+            </p>
+
+            {{-- ✅ DUGME KOJE VODI NA KATEGORIJU --}}
+            <a
+                href="{{ url('/jelovnik/kategorija/akcije') }}"
+                style="
+                    display:inline-block;
+                    background:#ffd600;
+                    color:#000;
+                    padding:14px 40px;
+                    border-radius:40px;
+                    font-weight:800;
+                    text-decoration:none;
+                    box-shadow:0 10px 25px rgba(0,0,0,.35);
+                "
+            >
+                Poruči odmah
+            </a>
+        </div>
+
+        {{-- SLIKA --}}
+        <div style="text-align:center;">
+            <img
+                src="{{ asset('assets/susam-akcija.PNG') }}"
+                alt="Akcija Susam piletina i Coca Cola"
+                style="
+                    max-width: 420px;
+                    width: 100%;
+                    border-radius: 22px;
+                    box-shadow: 0 30px 50px rgba(0,0,0,0.45);
+                "
+            >
+        </div>
+    </div>
+</section>
+
+
+
+{{-- =======================
    HERO SLIDER
 ======================= --}}
-<section class="hero-slider-section">
-    <div class="hero-slider-container">
+<section class="hero-slider-section"
+    style="
+        border-top: 6px solid #ffd600;
+        border-bottom: 6px solid #ffd600;
+        box-shadow: 0 18px 35px rgba(0,0,0,0.30);
+        padding-top: 30px;
+        padding-bottom: 30px;
+    "
+>
+    <div class="hero-slider-container"> 
 
         {{-- Slide 1 --}}
         <div class="dish-slide show">
@@ -216,7 +331,12 @@
     </div>
 </section>
 
+
+
 @include('partials.footer')
+
+@endsection
+
 
 {{-- =======================
    STYLES & SCRIPTS

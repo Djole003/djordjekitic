@@ -92,6 +92,13 @@
                             $hideMeat = 1;
                         }
                         break;
+                    case 'akcije':
+                        $hideSize = 1;
+                        $hideMeat = 1;
+                        $hideSos = 0;
+                        $hideAddons = 0;
+                        break;
+
                 }
                 ?>
 
@@ -119,48 +126,104 @@
 
 @include('partials.addToCartModal')
 
-{{-- JS OSTAVLJEN 1/1 --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     const addToCartModal = document.getElementById('addToCartModal');
     const modalInstance = new bootstrap.Modal(addToCartModal);
+    const form = document.getElementById('addToCartForm');
 
+    // =============================
+    // OTVARANJE MODALA
+    // =============================
     document.querySelectorAll('.order-btn').forEach(button => {
         button.addEventListener('click', function () {
 
+            const productId = this.dataset.id;
             const productName = this.dataset.name;
+            const productPrice = parseFloat(this.dataset.price);
+
+            // product id
+            document.getElementById('modalProductId').value = productId;
+
+            // base cena
+            document.getElementById('productBasePrice').value = productPrice;
+
+            // naslov
+            addToCartModal.querySelector('.modal-title').textContent =
+                "Dodaj u korpu: " + productName;
+
+            // početna cena
+            document.getElementById('totalPrice').innerText =
+                productPrice.toFixed(0);
+
+            // hide sekcije
             const hideSize = this.dataset.hideSize === "1";
             const hideSos = this.dataset.hideSos === "1";
             const hideAddons = this.dataset.hideAddons === "1";
             const hideMeat = this.dataset.hideMeat === "1";
 
-            addToCartModal.querySelector('.modal-title').textContent =
-                "Dodaj u korpu: " + productName;
-
-            const sizeSection   = addToCartModal.querySelector('#sizeSection');
-            const sosSection    = addToCartModal.querySelector('#sosSection');
-            const addonsSection = addToCartModal.querySelector('#addonsSection');
-            const meatSection   = addToCartModal.querySelector('#meatSection');
-
-            if (sizeSection)   sizeSection.style.display   = hideSize   ? 'none' : 'block';
-            if (sosSection)    sosSection.style.display    = hideSos    ? 'none' : 'block';
-            if (addonsSection) addonsSection.style.display = hideAddons ? 'none' : 'block';
-            if (meatSection)   meatSection.style.display   = hideMeat   ? 'none' : 'block';
+            document.getElementById('sizeSection').style.display   = hideSize   ? 'none' : 'block';
+            document.getElementById('sosSection').style.display    = hideSos    ? 'none' : 'block';
+            document.getElementById('addonsSection').style.display = hideAddons ? 'none' : 'block';
+            document.getElementById('meatSection').style.display   = hideMeat   ? 'none' : 'block';
 
             modalInstance.show();
         });
     });
 
+    // =============================
+    // SUBMIT FORME (AJAX)
+    // =============================
+    form.addEventListener('submit', function (e) {
+        e.preventDefault(); // ⛔ sprečava reload
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            if (data.success) {
+
+                // ✅ zatvori modal
+                modalInstance.hide();
+
+                // ✅ update badge korpe
+                const cartCount = document.getElementById('cart-count');
+                if (cartCount) {
+                    cartCount.textContent = data.cart_count;
+                    cartCount.style.display = 'inline-block';
+                }
+
+            }
+
+        })
+        .catch(err => {
+            console.error('Greška pri dodavanju u korpu:', err);
+        });
+    });
+
+    // =============================
+    // RESET MODALA
+    // =============================
     addToCartModal.addEventListener('hidden.bs.modal', function () {
-        document.getElementById('addToCartForm').reset();
+        form.reset();
+        document.getElementById('totalPrice').innerText = '0';
+
         document.querySelectorAll('.addon-checkbox').forEach(cb => cb.checked = false);
+
         document.body.classList.remove('modal-open');
         document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
     });
 
 });
 </script>
+
 
 @include('partials.footer')
 @endsection

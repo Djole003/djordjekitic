@@ -86,8 +86,21 @@ class ProductsTableSeeder extends Seeder
             ['name' => 'Voda', 'description' => '0,5l', 'price_delivery' => 70, 'price_takeaway' => 70, 'category_id' => 8, 'image_path' => 'assets/voda.jpg'],
             ['name' => 'Schweppes', 'description' => '0,33l', 'price_delivery' => 110, 'price_takeaway' => 100, 'category_id' => 8, 'image_path' => 'assets/sveps.jpg'],
 
+            // ======================
+            // AKCIJA – COMBO PONUDA
+            // ======================
+            [
+                'name' => 'Susam piletina + Coca-Cola',
+                'description' => 'Specijalna akcija: Susam piletina + Coca-Cola (ograničena ponuda)',
+                'price_delivery' => 750,
+                'price_takeaway' => 750,
+                'category_id' => 9, // Akcije
+                'image_path' => 'assets/susam-akcija.PNG',
+            ],
+
         ];
-        
+
+
 
         foreach ($products as $product) {
             Product::create($product);
